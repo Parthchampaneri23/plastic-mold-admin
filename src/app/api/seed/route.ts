@@ -1,0 +1,655 @@
+import { NextRequest, NextResponse } from "next/server";
+import { connectDB } from "@/lib/mongodb";
+import { User } from "@/models/User";
+import { HomePageContent } from "@/models/HomePageContent";
+import bcrypt from "bcryptjs";
+
+// Initial seed data directly taken from plastic-mold-website/src/data/home.ts
+const INITIAL_HOME_DATA = {
+  heroSlides: [
+    {
+      id: "hero-1",
+      subtitle: "PRECISION MOLD MANUFACTURING",
+      title: "Precision Molds",
+      highlightText: "Built to Perform.",
+      description: "High-precision mold solutions built for accuracy, durability and performance.",
+      image: "/Home/Banner1.png",
+      primaryCtaText: "EXPLORE PRODUCTS",
+      primaryCtaLink: "/products#catalog",
+      secondaryCtaText: "OUR CAPABILITIES",
+      secondaryCtaLink: "#capabilities",
+      badge: "Patel Mould Excellence",
+    },
+    {
+      id: "hero-2",
+      subtitle: "ADVANCED MOLD SOLUTIONS",
+      title: "Molds Built for Every",
+      highlightText: "Production Needs.",
+      description: "Preform, ISBM, and EBM tooling built for high-speed production.",
+      image: "/Home/Banner2.png",
+      primaryCtaText: "VIEW SOLUTIONS",
+      primaryCtaLink: "/products#catalog",
+      secondaryCtaText: "REQUEST A QUOTE",
+      secondaryCtaLink: "#inquiry-section",
+      badge: "Multi-Cavity Tooling",
+    },
+    {
+      id: "hero-3",
+      subtitle: "ENGINEERING & TECHNOLOGY",
+      title: "Engineered with",
+      highlightText: "Precision & Technology.",
+      description: "Advanced simulation, 5-axis CNC, and CMM inspection for precision tooling.",
+      image: "/Home/Banner3.png",
+      primaryCtaText: "OUR CAPABILITIES",
+      primaryCtaLink: "#capabilities",
+      secondaryCtaText: "ABOUT US",
+      secondaryCtaLink: "#company-intro",
+      badge: "5-Axis CNC & Mirror EDM",
+    },
+    {
+      id: "hero-4",
+      subtitle: "QUALITY • PRECISION • RELIABILITY",
+      title: "Built to Perform",
+      highlightText: "Designed to Last.",
+      description: "Precision molds built for lasting quality and reliable production.",
+      image: "/Home/Banner4.png",
+      primaryCtaText: "OUR QUALITY",
+      primaryCtaLink: "#quality-technology",
+      secondaryCtaText: "GET IN TOUCH",
+      secondaryCtaLink: "#inquiry-section",
+      badge: "ISO 9001:2015 Certified",
+    },
+  ],
+  companyStats: [
+    { value: "30+", label: "Years of Experience", subtext: "Established since 1994" },
+    { value: "1,500+", label: "Molds Manufactured", subtext: "Built for diverse industries" },
+    { value: "100%", label: "Quality Focused", subtext: "Built for reliable performance" },
+    { value: "25+ Cities", label: "Serving Across India", subtext: "Trusted by manufacturers nationwide" },
+  ],
+  productCategories: [
+    {
+      id: "preform-jar-mold",
+      anchorId: "preform-jar-mold",
+      name: "Preform & Jar Mold",
+      shortDesc: "High-precision multi-cavity PET preform molds and wide-mouth jar tooling engineered for high-speed cycle times and zero-defect output.",
+      image: "/Home/preform-mold.png",
+      features: ["Up to 96-cavity molds", "Balanced Hot Runner System", "Interchangeable neck inserts", "Optimized conformal cooling"],
+      productCount: 42,
+    },
+    {
+      id: "isbm-mold",
+      anchorId: "isbm-mold",
+      name: "ISBM Mold",
+      shortDesc: "Injection Stretch Blow Molding (ISBM) tooling engineered for single-stage premium container production with flawless optical clarity.",
+      image: "/Home/isbm-mold.png",
+      features: ["Single-stage process precision", "Pharma & Cosmetic Grade Finish", "Custom base design options", "High durability aircraft steel"],
+      productCount: 28,
+    },
+    {
+      id: "ebm-mold",
+      anchorId: "ebm-mold",
+      name: "EBM Mold",
+      shortDesc: "Extrusion Blow Molding (EBM) tooling for complex hollow plastic bottles, jerrycans, automotive tanks, and industrial containers.",
+      image: "/Home/ebm-mold.png",
+      features: ["Automated pinch-off inserts", "High-efficiency beryllium copper inserts", "Multi-layer co-extrusion compatibility", "Up to 30L capacity"],
+      productCount: 35,
+    },
+  ],
+  capabilities: [
+    {
+      id: "cnc-machining",
+      title: "5-Axis CNC Machining",
+      shortDesc: "High-speed 5-axis CNC milling centers delivering sub-micron mold cavity precision down to ±0.005mm.",
+      iconName: "Cpu",
+      machineBadge: "DMG MORI / Makino",
+      specifications: ["5-Axis Simultaneous Milling", "24,000 RPM Ultra-Spindle Speed", "Automated Tool Change & Laser Calibration"],
+    },
+    {
+      id: "edm",
+      title: "EDM (Electrical Discharge)",
+      shortDesc: "Advanced Mirror EDM & CNC Wire Cut EDM for deep cavity ribs, complex threads, and micro-precision inserts.",
+      iconName: "Zap",
+      machineBadge: "Makino Mirror EDM",
+      specifications: ["Sub-micron Ra 0.1 Mirror Polish Finish", "CNC Wire Cut EDM ±0.002mm Accuracy", "Multi-Electrode Automated Changer"],
+    },
+    {
+      id: "mold-design",
+      title: "Mold Design & CAD/CAM",
+      shortDesc: "Full 3D moldflow thermal simulation, stress analysis, and DFM optimization prior to steel cutting.",
+      iconName: "Layers",
+      machineBadge: "Autodesk Moldflow & UG NX",
+      specifications: ["3D Moldflow Thermal & Flow Analysis", "Parametric SolidWorks & UG NX Modeling", "Pre-Machining DFM Feasibility Reports"],
+    },
+    {
+      id: "precision-machining",
+      title: "Precision Grinding & Jig Boring",
+      shortDesc: "Specialized surface grinding, cylindrical grinding, and jig boring for core & cavity plate stack alignment.",
+      iconName: "Crosshair",
+      machineBadge: "Okamoto & Hauser Jig Bore",
+      specifications: ["Optical Profile Surface Grinding", "Jig Boring Alignment ±0.001mm", "Climate-Controlled Workshop Environment"],
+    },
+    {
+      id: "mold-assembly",
+      title: "Master Mold Assembly",
+      shortDesc: "Hand-crafted assembly by master toolmakers with optical alignment, action fitting, and hydraulic testing.",
+      iconName: "Wrench",
+      machineBadge: "Master Toolmakers",
+      specifications: ["Optical & Laser Core Alignment", "3D CMM Cavity Verification", "Hydraulic & Mechanical Action Trial Fitting"],
+    },
+    {
+      id: "mold-testing",
+      title: "Mold Testing & Sampling",
+      shortDesc: "In-house sampling capability on 100T-1200T injection and blow molding production machines.",
+      iconName: "PlayCircle",
+      machineBadge: "100T - 1200T Trial Press",
+      specifications: ["Full Batch Trial Reports & Video Analysis", "Wall Thickness & Concentricity Audit", "Cycle Time & Gate Mark Optimization"],
+    },
+  ],
+  whyChooseUs: [
+    {
+      id: "precision-mfg",
+      title: "Precision Manufacturing",
+      description: "Micron-level accuracy ensures seamless component interchangeability and extended mold longevity.",
+      iconName: "ShieldCheck",
+      highlight: "±0.005mm Tolerance",
+    },
+    {
+      id: "advanced-tech",
+      title: "Advanced Technology",
+      description: "Equipped with European and Japanese 5-axis CNCs, Makino EDMs, and Zeiss inspection gear.",
+      iconName: "Cpu",
+      highlight: "World-Class Fleet",
+    },
+    {
+      id: "quality-assurance",
+      title: "Quality Assurance",
+      description: "Strict ISO 9001:2015 protocol with 100% CMM dimensional audit before shipment.",
+      iconName: "Award",
+      highlight: "ISO 9001:2015 Certified",
+    },
+    {
+      id: "customized-solutions",
+      title: "Customized Solutions",
+      description: "Tailor-engineered mold structures matching exact client production lines and cycle targets.",
+      iconName: "Sliders",
+      highlight: "Custom DFM Design",
+    },
+    {
+      id: "experienced-team",
+      title: "Experienced Team",
+      description: "Over 80 senior engineers and master moldmakers with decades of specialized industry experience.",
+      iconName: "Users",
+      highlight: "80+ Toolmakers",
+    },
+    {
+      id: "ontime-delivery",
+      title: "On-Time Delivery",
+      description: "Streamlined project management ensuring on-time mold delivery and rapid global support.",
+      iconName: "Clock",
+      highlight: "98.5% On-Time Record",
+    },
+  ],
+  facilities: [
+    {
+      id: "cnc-machining",
+      title: "High-Speed CNC Machining Center",
+      category: "Precision Machining Facility",
+      image: "/infrastructure/cnc-machining.jpg",
+      description: "Multi-axis vertical CNC milling centers producing precision mould plates, core and cavity inserts with sub-micron accuracy.",
+      equipmentCount: "12 CNC Machining Centers",
+      link: "/infrastructure#cnc-machining",
+    },
+    {
+      id: "edm-machining",
+      title: "Die-Sinking EDM & Spark Tooling Workshop",
+      category: "Spark Erosion Facility",
+      image: "/infrastructure/edm-machining.jpg",
+      description: "Advanced mirror EDM and wire erosion achieving complex profiles, sharp internal corners, and deep cavity ribs with ultra-fine Ra 0.1 finish.",
+      equipmentCount: "8 Mirror EDMs & Wire Cuts",
+      link: "/infrastructure#edm-machining",
+    },
+    {
+      id: "mould-assembly",
+      title: "Mould Assembly & Precision Fitting Hall",
+      category: "Toolroom Fitting & Assembly",
+      image: "/infrastructure/mold-assembly.jpg",
+      description: "Careful component fitting, alignment verification, manifold cooling routing, and mechanical action checks by master toolmakers.",
+      equipmentCount: "15,000 m² Fitting Facility",
+      link: "/infrastructure#mould-assembly",
+    },
+    {
+      id: "quality-inspection",
+      title: "Quality Inspection & Metrology Laboratory",
+      category: "Metrology & Quality Assurance",
+      image: "/infrastructure/quality-inspection.jpg",
+      description: "Comprehensive 3D coordinate verification, critical dimension audits, and drawing conformity tests ensuring zero-defect tooling reliability.",
+      equipmentCount: "3 Zeiss 3D CMM Scanners",
+      link: "/infrastructure#quality-inspection",
+    },
+  ],
+  industries: [
+    {
+      id: "packaging",
+      name: "Packaging",
+      description: "Thin-wall containers, caps, closures, and industrial packaging solutions with ultra-fast cycle times.",
+      image: "/industries/packaging-clean.jpg",
+      badge: "High-Speed Cycle",
+      link: "/industries/packaging",
+    },
+    {
+      id: "food-beverage",
+      name: "Food & Beverage",
+      description: "PET bottle preforms, wide-mouth food jars, juice containers, and mineral water packaging molds.",
+      image: "/industries/food-beverage-clean.jpg",
+      badge: "FDA Standard",
+      link: "/industries/food-beverage",
+    },
+    {
+      id: "pharmaceutical",
+      name: "Pharmaceutical",
+      description: "Medical-grade liquid bottles, pill containers, dropper bottles, and cleanroom compliant tooling.",
+      image: "/industries/pharmaceutical-clean.jpg",
+      badge: "Cleanroom Grade",
+      link: "/industries/pharmaceutical",
+    },
+    {
+      id: "personal-care",
+      name: "Personal Care",
+      description: "Shampoo bottles, lotion pumps, cosmetic jars, and high-end aesthetic packaging molds.",
+      image: "/industries/personal-care-clean.jpg",
+      badge: "Premium Finish",
+      link: "/industries/personal-care",
+    },
+    {
+      id: "plastic-containers",
+      name: "Plastic Containers",
+      description: "Industrial chemical jerrycans, lubricant bottles, storage drums, and heavy-duty blow containers.",
+      image: "/industries/plastic-containers-clean.jpg",
+      badge: "Heavy Duty",
+      link: "/industries/plastic-containers",
+    },
+    {
+      id: "chemical-packaging",
+      name: "Chemical Packaging",
+      description: "Hazardous chemical containers, agrochemical bottles, and high-barrier industrial packaging.",
+      image: "/industries/chemical-packaging-clean.jpg",
+      badge: "Chemical Resistant",
+      link: "/industries/chemical-packaging",
+    },
+  ],
+  qualityStandards: [
+    {
+      id: "iso-9001",
+      title: "ISO 9001:2015 Certification",
+      description: "Full compliance with international quality management standards across all design and production phases.",
+      iconName: "ShieldCheck",
+      spec: "Global Standard",
+    },
+    {
+      id: "cmm-inspection",
+      title: "Full 3D CMM Dimensional Inspection",
+      description: "Every single core, cavity, and mold base component is verified against 3D CAD model data.",
+      iconName: "Target",
+      spec: "±0.002mm Accuracy",
+    },
+    {
+      id: "steel-cert",
+      title: "Certified European Steel Supply",
+      description: "We use only genuine Swedish Uddeholm and German ASSAB steel with full metallurgical certificates.",
+      iconName: "Award",
+      spec: "S136, H13, NAK80 Steel",
+    },
+    {
+      id: "moldflow-sim",
+      title: "Advanced Moldflow Analysis",
+      description: "Pre-machining thermal & flow simulation to eliminate weld lines, air traps, and excessive stress.",
+      iconName: "Activity",
+      spec: "Zero-Defect Goal",
+    },
+  ],
+  qualitySection: {
+    eyebrowBadge: "ZERO-DEFECT TOOLING GUARANTEE",
+    headlineMain: "Quality Standards &",
+    headlineHighlight: "Technology Highlights.",
+    description: "Explore our 4-pillar quality framework engineered to deliver ±0.002mm sub-micron accuracy, flashless output, and 5,000,000+ shot tool lifespan.",
+    standardsTab: {
+      tabBadge: "ISO 9001:2015 QMS FRAMEWORK",
+      heading: "Global Industrial Quality Standards",
+      description: "Our Quality Management System enforces strict metallurgical traceability, cleanroom compliant mold assembly standards, and zero-defect flashless gating protocols across every PET, ISBM, and EBM tooling project.",
+      features: [
+        "ISO 9001:2015 Certified Toolroom",
+        "Swedish Uddeholm S136 ESR Steel",
+        "Zero Flash Injection Tolerance",
+        "EN 10204 3.1 Mill Certificate"
+      ],
+      benchmarkSubtitle: "Patel Mould vs Industry",
+      benchmarks: [
+        {
+          id: "bench-1",
+          label: "Cavity Dimension Accuracy",
+          value: "±0.002 mm",
+          percentage: 98,
+        },
+        {
+          id: "bench-2",
+          label: "Mold Life Longevity",
+          value: "5,000,000+ Shots",
+          percentage: 95,
+        },
+        {
+          id: "bench-3",
+          label: "Gate Vestige Polish",
+          value: "Ra 0.1 Mirror Finish",
+          percentage: 100,
+        },
+      ],
+    },
+    inspectionTab: {
+      heading: "4-Step Precision Inspection Workflow",
+      description: "Every component is audited through optical laser scanning and 3D CMM coordinate verification before assembly.",
+      steps: [
+        {
+          id: "step-1",
+          stepNumber: "01",
+          title: "Raw Steel Audit",
+          description: "Ultrasonic flaw detection & hardness testing on Assab/Uddeholm steel blocks.",
+          badge: "Ultrasonic Inspection",
+        },
+        {
+          id: "step-2",
+          stepNumber: "02",
+          title: "In-Process CNC Audit",
+          description: "On-machine Renishaw touch probe calibration during 5-axis electrode & cavity milling.",
+          badge: "Renishaw Laser Probe",
+        },
+        {
+          id: "step-3",
+          stepNumber: "03",
+          title: "Zeiss 3D CMM Metrology",
+          description: "100% dimensional scan in 20°C climate lab against original 3D CAD model.",
+          badge: "Zeiss 3D Scanning",
+        },
+        {
+          id: "step-4",
+          stepNumber: "04",
+          title: "FAIR Sample Approval",
+          description: "First Article Inspection Report delivered with full CMM data prior to shipping.",
+          badge: "FAIR Report Certificate",
+        },
+      ],
+    },
+    testingTab: {
+      tabBadge: "In-House Sampling Machine Fleet",
+      heading: "Turnkey Trial Pressing (100T - 1200T)",
+      description: "We don't ship unproven molds. Our in-house test bay houses high-speed injection and blow molding trial presses ranging from 100-ton to 1200-ton clamping force, replicating your exact production environment.",
+      points: [
+        { id: "pt-1", text: "Real-time cycle time speed optimization & pressure balancing" },
+        { id: "pt-2", text: "Preform wall thickness & optical polarization concentricity audit" },
+        { id: "pt-3", text: "Hydraulic & pneumatic action trial fitting under maximum pressure" },
+      ],
+      stats: [
+        { id: "stat-1", value: "100T - 1200T", label: "Clamping Force Test Fleet" },
+        { id: "stat-2", value: "100% Batch", label: "Trial Sampling Reports" },
+      ],
+    },
+    technologyTab: {
+      cards: [
+        {
+          id: "tech-1",
+          title: "3D Moldflow Thermal Simulation",
+          description: "Pre-machining thermal and melt flow analysis using Autodesk Moldflow to eliminate air traps, weld lines, and warpage.",
+          badge: "Autodesk Moldflow Integrated",
+          accentColor: "blue",
+        },
+        {
+          id: "tech-2",
+          title: "Sequential Hot Runner Gating",
+          description: "Husky & Mold-Masters hot runner integration with needle valve sequential gating for zero flash and uniform cavity filling.",
+          badge: "Husky & Mold-Masters Systems",
+          accentColor: "orange",
+        },
+        {
+          id: "tech-3",
+          title: "Conformal Cooling Channel Design",
+          description: "Advanced 3D curved conformal cooling channels following cavity geometry, reducing mold cycle time up to 30%.",
+          badge: "30% Cycle Time Reduction",
+          accentColor: "blue",
+        },
+      ],
+    },
+  },
+  featuredProductsSection: {
+    eyebrowBadge: "CATEGORY FLAGSHIP SHOWCASE",
+    headlineMain: "Featured Mold Products.",
+    headlineHighlight: "Flagship Tooling Series.",
+    description: "Explore flagship high-performance tooling solutions engineered for each of our 3 core mold categories with guaranteed 5M+ cycle tool life.",
+  },
+  featuredProducts: [
+    {
+      id: "feat-preform",
+      slug: "pet-preform-mold",
+      name: "PET Preform Mold",
+      category: "Preform & Jar Mold",
+      image: "/product/pet-preform-mold.png",
+      tag: "High Volume",
+      shortDesc: "High-speed preform moulds built for smooth, reliable bottle production and seamless daily output.",
+      link: "/products/pet-preform-mold#details",
+      specifications: [
+        { label: "Mold Type", value: "PET Preform" },
+        { label: "Application", value: "Beverage & Packaging" },
+        { label: "Cavity Config", value: "Custom (Single to Multi-cavity)" },
+      ],
+    },
+    {
+      id: "feat-isbm",
+      slug: "isbm-bottle-mold",
+      name: "ISBM Bottle Mold",
+      category: "ISBM Mold",
+      image: "/product/isbm-bottle-mold.png",
+      tag: "Optical Clarity",
+      shortDesc: "Single-stage stretch blow moulds delivering crystal-clear bottle finish and uniform wall strength.",
+      link: "/products/isbm-bottle-mold#details",
+      specifications: [
+        { label: "Mold Type", value: "ISBM" },
+        { label: "Application", value: "PET Bottles" },
+        { label: "Configuration", value: "Single-Stage Custom" },
+      ],
+    },
+    {
+      id: "feat-ebm",
+      slug: "ebm-bottle-mold",
+      name: "EBM Bottle Mold",
+      category: "EBM Mold",
+      image: "/product/ebm-bottle-mold.png",
+      tag: "Heavy Duty",
+      shortDesc: "Durable extrusion blow moulds engineered for crisp bottle contours and clean flash separation.",
+      link: "/products/ebm-bottle-mold#details",
+      specifications: [
+        { label: "Mold Type", value: "EBM" },
+        { label: "Application", value: "Bottles & Containers" },
+        { label: "Pinch Inserts", value: "Beryllium Copper" },
+      ],
+    },
+  ],
+  clientsSection: {
+    eyebrowBadge: "TRUSTED INDIAN INDUSTRY LEADERS",
+    headlineMain: "Valued Clients &",
+    headlineHighlight: "Customer Success.",
+    description: "Partnering with India's premier beverage bottlers, FMCG conglomerates, and pharmaceutical packaging leaders nationwide.",
+    pill1Text: "25+ Cities Across India",
+    pill2Text: "Trusted Since 1994",
+  },
+  clientLogoImages: [
+    { id: "c1", name: "Astral Pipes", image: "/Home/client1.png" },
+    { id: "c2", name: "Bisleri", image: "/Home/client2.webp" },
+    { id: "c3", name: "Mankind Pharma", image: "/Home/client3.png" },
+    { id: "c4", name: "Supreme Industries", image: "/Home/client4.png" },
+    { id: "c5", name: "Industry Partner", image: "/Home/cleint5.png" },
+  ],
+  indianClientLogos: [
+    { id: "ic1", name: "Bisleri International Ltd.", location: "Mumbai", state: "Maharashtra", industry: "Mineral Water & Beverages", logoBg: "from-blue-600 to-cyan-500" },
+    { id: "ic2", name: "Parle Agro Pvt. Ltd.", location: "Mumbai", state: "Maharashtra", industry: "FMCG & Juice Packaging", logoBg: "from-emerald-600 to-teal-500" },
+    { id: "ic3", name: "Dabur India Ltd.", location: "New Delhi", state: "Delhi NCR", industry: "Personal Care & Foods", logoBg: "from-amber-500 to-orange-500" },
+    { id: "ic4", name: "Mankind Pharma Ltd.", location: "New Delhi", state: "Delhi NCR", industry: "Pharmaceutical Containers", logoBg: "from-indigo-600 to-blue-500" },
+    { id: "ic5", name: "Supreme Industries Ltd.", location: "Ahmedabad", state: "Gujarat", industry: "Plastics & Industrial", logoBg: "from-[#0056b3] to-[#003d80]" },
+    { id: "ic6", name: "Astral Poly Technik Ltd.", location: "Ahmedabad", state: "Gujarat", industry: "Rigid Packaging & Piping", logoBg: "from-[#ff6b00] to-amber-600" },
+  ],
+  indianTestimonials: [
+    {
+      id: "it1",
+      quote: "Patel Mould Industries delivered a 72-cavity preform mold for our high-speed water bottling line in Sanand. The cycle time dropped from 11 seconds to 8.8 seconds with zero flash, saving us lakhs in monthly energy costs.",
+      author: "Rajesh Patel",
+      position: "General Manager - Tooling & Ops",
+      company: "Bisleri International Ltd.",
+      location: "Ahmedabad, Gujarat",
+      rating: 5,
+    },
+    {
+      id: "it2",
+      quote: "We commissioned a 16-cavity wide mouth food jar mold for our pickle and sauce line. Their hot runner balance and dimensional accuracy are top notch. Excellent after-sales service team.",
+      author: "Vikram Sharma",
+      position: "Senior Plant Head",
+      company: "Parle Agro Pvt. Ltd.",
+      location: "Mumbai, Maharashtra",
+      rating: 5,
+    },
+    {
+      id: "it3",
+      quote: "Sub-micron optical clarity on our ISBM cosmetic shampoo bottle molds. Patel Mould's engineering team provided invaluable DFM support prior to steel cutting.",
+      author: "Siddharth Agarwal",
+      position: "Head of Packaging Procurement",
+      company: "Dabur India Ltd.",
+      location: "New Delhi",
+      rating: 5,
+    },
+    {
+      id: "it4",
+      quote: "Their medical-grade cleanroom dropper bottle tooling passed our CMM dimensional audit on the very first injection sample. Highly reliable partner for pharma packaging.",
+      author: "Dr. Ananya Mehta",
+      position: "Director - Quality & QA",
+      company: "Mankind Pharma Ltd.",
+      location: "Baddi, Himachal Pradesh",
+      rating: 5,
+    },
+    {
+      id: "it5",
+      quote: "5-Litre chemical jerrycan EBM molds delivered right on schedule. Beryllium copper pinch inserts give flawless weld lines and superior container drop strength.",
+      author: "Karan Shah",
+      position: "VP - Manufacturing & Tooling",
+      company: "Supreme Industries Ltd.",
+      location: "Vadodara, Gujarat",
+      rating: 5,
+    },
+    {
+      id: "it6",
+      quote: "Working with Patel Mould for over 12 years. Their mold life consistently exceeds 5 million shots with minimal maintenance downtime. Proudly Made in India quality.",
+      author: "Amitabh Verma",
+      position: "Chief Operating Officer",
+      company: "Astral Poly Technik Ltd.",
+      location: "Rajkot, Gujarat",
+      rating: 5,
+    },
+  ],
+  companyIntro: {
+    badge: "PRECISION TOOLING LEADERSHIP",
+    heading: "Over 3 Decades of Excellence in",
+    highlightHeading: "High-Precision Mold Manufacturing",
+    paragraph1: "Founded in 1994, Patel Mould Industries has emerged as a premier manufacturer of high-cavitation PET preform molds, single-stage ISBM molds, and extrusion blow molds (EBM) in India.",
+    paragraph2: "With state-of-the-art 5-axis CNC machining, Makino mirror spark erosion EDM, and Japanese high-speed milling, we guarantee sub-micron cavity accuracy and multi-million shot mold longevity.",
+    statNumber: "30+",
+    statText: "Years of Engineering Expertise",
+  },
+  inquiryCta: {
+    badge: "RAPID 24-HOUR QUOTE TURNAROUND",
+    title: "Have a Mold Requirement?",
+    highlightTitle: "",
+    description: "Connect with our senior tooling engineers today. Send us your 2D/3D container drawings or preform specs for a free DFM review and detailed quote within 24 hours.",
+    features: [
+      "Free Design for Manufacturability (DFM) Assessment",
+      "Guaranteed Mold Cycle Time Estimate",
+      "Strict Non-Disclosure Agreement (NDA) Protection"
+    ],
+    phone: "91+ 7784758347",
+    email: "quotes@plastic-mold.com",
+    address: "GIDC Industrial Estate, Phase 4, Vatva, Ahmedabad, Gujarat 382445, India",
+    formTitle: "Request Technical Quotation",
+    buttonText: "Request a Quote / Send Inquiry",
+  },
+  topBar: {
+    phone: "91+ 7784758347",
+    email: "sales@patelmould.com",
+    address: "Patel Mould Park, Phase-IV GIDC, Gujarat, India",
+    mapsUrl: "https://www.google.com/maps/search/?api=1&query=Precision+Mould+Park+Phase+IV+GIDC+Vatva+Gujarat+India",
+  },
+  navbar: {
+    logoImage: "/PMlogo.png",
+    logoAlt: "Patel Mould Industries",
+    ctaButtonText: "Request a Quote",
+    ctaButtonLink: "#inquiry-section",
+    menuLinks: [
+      { label: "About Us", href: "/about" },
+      { label: "Products", href: "/products", isMegaMenu: true },
+      { label: "Manufacturing", href: "/manufacturing" },
+      { label: "Infrastructure", href: "/infrastructure" },
+      { label: "Industries", href: "/industries" },
+      { label: "Blogs", href: "/blogs" },
+      { label: "Contact Us", href: "/contact" },
+    ],
+  },
+  footer: {
+    logoImage: "/PMlogo.png",
+    companyBio: "Patel Mould Industries is an manufacturer specializing in high-speed, multi-cavity PET preform, ISBM, and Extrusion Blow Molds for the beverage, pharmaceutical, packaging, and personal care industries.",
+    phone: "91+ 7784758347",
+    email: "sales@patelmould.com",
+    address: "Patel Mould Park, Phase-IV GIDC, Gujarat, India",
+    mapsUrl: "https://www.google.com/maps/search/?api=1&query=Precision+Mould+Park+Phase+IV+GIDC+Vatva+Gujarat+India",
+    copyrightText: "© 2026 Patel Mould Industries. All rights reserved.",
+    socialLinks: {
+      linkedin: "https://linkedin.com",
+      facebook: "https://facebook.com",
+      twitter: "https://twitter.com",
+      instagram: "https://instagram.com",
+      youtube: "https://youtube.com",
+    },
+  },
+};
+
+export async function GET(req: NextRequest) {
+  try {
+    await connectDB();
+
+    // 1. Seed or ensure admin user exists
+    const adminEmail = process.env.ADMIN_EMAIL || "admin@plasticmold.com";
+    const adminPassword = process.env.ADMIN_PASSWORD || "admin123";
+
+    let admin = await User.findOne({ email: adminEmail });
+    if (!admin) {
+      const hashedPassword = await bcrypt.hash(adminPassword, 10);
+      admin = await User.create({
+        name: "Patel Mould Admin",
+        email: adminEmail,
+        passwordHash: hashedPassword,
+        role: "superadmin",
+      });
+    }
+
+    // 2. Seed or fetch Home Page Content
+    let homeDoc = await HomePageContent.findOne();
+    if (!homeDoc) {
+      homeDoc = await HomePageContent.create(INITIAL_HOME_DATA);
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "Database initialized successfully",
+      adminUser: { email: admin.email, name: admin.name, role: admin.role },
+      homePageSeeded: !!homeDoc,
+    });
+  } catch (error: any) {
+    console.error("Seed error:", error);
+    return NextResponse.json(
+      { success: false, error: error.message || "Failed to initialize database" },
+      { status: 500 }
+    );
+  }
+}

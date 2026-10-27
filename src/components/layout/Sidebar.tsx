@@ -1,0 +1,333 @@
+"use client";
+
+import React, { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import {
+  LayoutDashboard,
+  LogOut,
+  ExternalLink,
+  ChevronDown,
+  ChevronRight,
+  Factory,
+  Globe,
+} from "lucide-react";
+
+interface SidebarProps {
+  currentTab?: string;
+  setCurrentTab?: (tab: string) => void;
+}
+
+export function Sidebar({ currentTab = "overview", setCurrentTab }: SidebarProps) {
+  const router = useRouter();
+  const [siteDropdownOpen, setSiteDropdownOpen] = useState(true);
+  const [homeDropdownOpen, setHomeDropdownOpen] = useState(true);
+  const [aboutDropdownOpen, setAboutDropdownOpen] = useState(false);
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      router.push("/login");
+      router.refresh();
+    } catch {
+      router.push("/login");
+    }
+  };
+
+  // Clean, pure text list of home page sections
+  const homeSections = [
+    { id: "hero", label: "1. Sliders & Banners" },
+    { id: "company-intro", label: "2. About Us Section" },
+    { id: "categories", label: "3. Product Categories" },
+    { id: "capabilities", label: "4. Manufacturing Capabilities" },
+    { id: "why-us", label: "5. Why Choose Us" },
+    { id: "facilities", label: "6. Infrastructure / Facilities" },
+    { id: "industries", label: "7. Industries & Global Reach" },
+    { id: "quality", label: "8. Quality & Technology Highlights" },
+    { id: "featured-products", label: "9. Featured Products" },
+    { id: "testimonials", label: "10. Clients & Testimonials" },
+    { id: "cta", label: "11. Inquiry & Contact CTA" },
+  ];
+
+  // Clean list of About Us page sections
+  const aboutSections = [
+    { id: "about-hero", label: "1. Banner & Breadcrumb" },
+    { id: "about-company", label: "2. About Patel Mould (Story & Timeline)" },
+    { id: "about-vision", label: "3. Vision, Mission & Values" },
+    { id: "about-strength", label: "4. Company Strengths & 4 Pillars" },
+    { id: "about-infrastructure", label: "5. Toolroom Infrastructure" },
+    { id: "about-quality", label: "6. Quality Commitment Journey" },
+    { id: "about-faqs", label: "7. About Page FAQs" },
+  ];
+
+  return (
+    <aside className="w-72 bg-white border-r border-slate-200 flex flex-col shrink-0 h-screen sticky top-0 select-none shadow-xs text-slate-800">
+      {/* Brand Header */}
+      <div className="h-18 px-5 border-b border-slate-200 bg-white flex items-center justify-between">
+        <Link href="/dashboard" className="flex items-center gap-3 group">
+          <div className="relative w-11 h-11 rounded-xl bg-white border border-slate-200 p-1 flex items-center justify-center shadow-xs overflow-hidden shrink-0">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/PMlogo.png"
+              alt="Patel Mould Logo"
+              className="w-full h-full object-contain"
+            />
+          </div>
+          <div>
+            <span className="font-extrabold text-sm tracking-tight text-slate-900 block leading-tight">
+              PATEL MOULD
+            </span>
+            <span className="text-[10px] font-bold text-[#ff6b00] tracking-wider uppercase">
+              Admin CMS Portal
+            </span>
+          </div>
+        </Link>
+      </div>
+
+      {/* Navigation Sections */}
+      <div className="flex-1 overflow-y-auto px-3.5 py-4 space-y-4 scrollbar-thin">
+        {/* Dashboard Overview */}
+        <button
+          onClick={() => setCurrentTab && setCurrentTab("overview")}
+          className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            currentTab === "overview"
+              ? "bg-[#0056b3] text-white shadow-sm shadow-[#0056b3]/25"
+              : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+          }`}
+        >
+          <div className="flex items-center gap-2.5">
+            <LayoutDashboard className={`w-4 h-4 ${currentTab === "overview" ? "text-white" : "text-slate-500"}`} />
+            <span>Dashboard Overview</span>
+          </div>
+          {currentTab === "overview" && <span className="w-1.5 h-1.5 rounded-full bg-[#ff6b00]" />}
+        </button>
+
+        {/* WEBSITE PAGES GROUP */}
+        <div>
+          <div className="px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+            Website Pages
+          </div>
+
+          <div className="space-y-3">
+            {/* 1. SITE MANAGER ACCORDION (TOP BAR, NAVBAR, FOOTER) */}
+            <div className="rounded-2xl border border-slate-200 bg-slate-50/60 overflow-hidden shadow-xs">
+              <button
+                onClick={() => setSiteDropdownOpen(!siteDropdownOpen)}
+                className="w-full flex items-center justify-between px-4 py-3 text-left transition-colors cursor-pointer bg-white hover:bg-slate-50 border-b border-slate-200"
+              >
+                <div className="flex items-center gap-2">
+                  <Globe className="w-3.5 h-3.5 text-[#0056b3]" />
+                  <span className="text-xs font-bold text-slate-900 tracking-wide">
+                    Site Manager
+                  </span>
+                  <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-[#0056b3]/10 text-[#0056b3] border border-[#0056b3]/20">
+                    Global
+                  </span>
+                </div>
+
+                <div className="text-slate-400">
+                  {siteDropdownOpen ? (
+                    <ChevronDown className="w-4 h-4 text-[#ff6b00]" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  )}
+                </div>
+              </button>
+
+              {siteDropdownOpen && (
+                <div className="p-1.5 space-y-1 bg-white">
+                  <button
+                    onClick={() => setCurrentTab && setCurrentTab("site-topbar")}
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                      currentTab === "site-topbar"
+                        ? "bg-[#0056b3] text-white shadow-xs font-bold"
+                        : "text-slate-700 hover:text-slate-900 hover:bg-slate-100 font-medium"
+                    }`}
+                  >
+                    <span className="text-xs truncate">Top Bar (Contacts & Map)</span>
+                  </button>
+
+                  <button
+                    onClick={() => setCurrentTab && setCurrentTab("site-navbar")}
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                      currentTab === "site-navbar"
+                        ? "bg-[#0056b3] text-white shadow-xs font-bold"
+                        : "text-slate-700 hover:text-slate-900 hover:bg-slate-100 font-medium"
+                    }`}
+                  >
+                    <span className="text-xs truncate">Main Navbar (Logo & Links)</span>
+                  </button>
+
+                  <button
+                    onClick={() => setCurrentTab && setCurrentTab("site-footer")}
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                      currentTab === "site-footer"
+                        ? "bg-[#0056b3] text-white shadow-xs font-bold"
+                        : "text-slate-700 hover:text-slate-900 hover:bg-slate-100 font-medium"
+                    }`}
+                  >
+                    <span className="text-xs truncate">Global Footer</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* 2. HOME PAGE WITH DROPDOWN ARROW */}
+            <div className="rounded-2xl border border-slate-200 bg-slate-50/60 overflow-hidden shadow-xs">
+              <button
+                onClick={() => setHomeDropdownOpen(!homeDropdownOpen)}
+                className="w-full flex items-center justify-between px-4 py-3 text-left transition-colors cursor-pointer bg-white hover:bg-slate-50 border-b border-slate-200"
+              >
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-slate-900 tracking-wide">
+                  Home Page
+                </span>
+                <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-[#ff6b00]/10 text-[#ff6b00] border border-[#ff6b00]/20">
+                  Active
+                </span>
+              </div>
+
+              {/* Arrow Indicator */}
+              <div className="text-slate-400">
+                {homeDropdownOpen ? (
+                  <ChevronDown className="w-4 h-4 text-[#ff6b00]" />
+                ) : (
+                  <ChevronRight className="w-4 h-4 text-slate-400" />
+                )}
+              </div>
+            </button>
+
+              {/* SECTIONS LIST INSIDE DROPDOWN - Pure clean text rows */}
+              {homeDropdownOpen && (
+                <div className="p-1.5 space-y-1 bg-white">
+                  {homeSections.map((sec) => {
+                    const isActive = currentTab === sec.id;
+                    return (
+                      <button
+                        key={sec.id}
+                        onClick={() => setCurrentTab && setCurrentTab(sec.id)}
+                        className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                          isActive
+                            ? "bg-[#0056b3] text-white shadow-xs font-bold"
+                            : "text-slate-700 hover:text-slate-900 hover:bg-slate-100 font-medium"
+                        }`}
+                      >
+                        <span className="text-xs truncate">
+                          {sec.label}
+                        </span>
+                        {isActive && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#ff6b00] shrink-0" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* 3. ABOUT US PAGE WITH DROPDOWN ARROW */}
+            <div className="rounded-2xl border border-slate-200 bg-slate-50/60 overflow-hidden shadow-xs">
+              <button
+                onClick={() => setAboutDropdownOpen(!aboutDropdownOpen)}
+                className="w-full flex items-center justify-between px-4 py-3 text-left transition-colors cursor-pointer bg-white hover:bg-slate-50 border-b border-slate-200"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-slate-900 tracking-wide">
+                    About Page
+                  </span>
+                  <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-[#0056b3]/10 text-[#0056b3] border border-[#0056b3]/20">
+                    Live
+                  </span>
+                </div>
+
+                {/* Arrow Indicator */}
+                <div className="text-slate-400">
+                  {aboutDropdownOpen ? (
+                    <ChevronDown className="w-4 h-4 text-[#ff6b00]" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  )}
+                </div>
+              </button>
+
+              {/* SECTIONS LIST INSIDE DROPDOWN */}
+              {aboutDropdownOpen && (
+                <div className="p-1.5 space-y-1 bg-white">
+                  {aboutSections.map((sec) => {
+                    const isActive = currentTab === sec.id;
+                    return (
+                      <button
+                        key={sec.id}
+                        onClick={() => setCurrentTab && setCurrentTab(sec.id)}
+                        className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                          isActive
+                            ? "bg-[#0056b3] text-white shadow-xs font-bold"
+                            : "text-slate-700 hover:text-slate-900 hover:bg-slate-100 font-medium"
+                        }`}
+                      >
+                        <span className="text-xs truncate">
+                          {sec.label}
+                        </span>
+                        {isActive && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#ff6b00] shrink-0" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Links */}
+        <div>
+          <div className="px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+            Preview & Links
+          </div>
+          <div className="space-y-1">
+            <a
+              href="http://localhost:3000"
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-700 hover:text-[#0056b3] hover:bg-slate-100 transition-all group"
+            >
+              <div className="flex items-center gap-2">
+                <ExternalLink className="w-4 h-4 text-[#ff6b00]" />
+                <span>Open Live Website (3000)</span>
+              </div>
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+            </a>
+          </div>
+        </div>
+      </div>
+
+      {/* User / Sign Out Footer */}
+      <div className="p-3 border-t border-slate-200 bg-slate-50/80">
+        <div className="flex items-center justify-between p-2 rounded-xl bg-white border border-slate-200 shadow-xs">
+          <div className="flex items-center gap-2.5 overflow-hidden">
+            <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 p-0.5 flex items-center justify-center shrink-0 shadow-xs overflow-hidden">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/PMlogo.png"
+                alt="PM"
+                className="w-full h-full object-contain"
+              />
+            </div>
+            <div className="truncate">
+              <p className="text-xs font-bold text-slate-900 truncate">Patel Mould Admin</p>
+              <p className="text-[10px] text-slate-500 truncate">admin@plasticmold.com</p>
+            </div>
+          </div>
+          <button
+            onClick={handleLogout}
+            title="Sign out"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all cursor-pointer"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    </aside>
+  );
+}
