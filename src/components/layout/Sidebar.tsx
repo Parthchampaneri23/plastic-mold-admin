@@ -129,15 +129,9 @@ export function Sidebar({ currentTab = "overview", setCurrentTab }: SidebarProps
                 onClick={() => setSiteDropdownOpen(!siteDropdownOpen)}
                 className="w-full flex items-center justify-between px-4 py-3 text-left transition-colors cursor-pointer bg-white hover:bg-slate-50 border-b border-slate-200"
               >
-                <div className="flex items-center gap-2">
-                  <Globe className="w-3.5 h-3.5 text-[#0056b3]" />
-                  <span className="text-xs font-bold text-slate-900 tracking-wide">
-                    Site Manager
-                  </span>
-                  <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-[#0056b3]/10 text-[#0056b3] border border-[#0056b3]/20">
-                    Global
-                  </span>
-                </div>
+                <span className="text-xs font-bold text-slate-900 tracking-wide">
+                  Site Manager
+                </span>
 
                 <div className="text-slate-400">
                   {siteDropdownOpen ? (
@@ -192,24 +186,19 @@ export function Sidebar({ currentTab = "overview", setCurrentTab }: SidebarProps
                 onClick={() => setHomeDropdownOpen(!homeDropdownOpen)}
                 className="w-full flex items-center justify-between px-4 py-3 text-left transition-colors cursor-pointer bg-white hover:bg-slate-50 border-b border-slate-200"
               >
-              <div className="flex items-center gap-2">
                 <span className="text-xs font-bold text-slate-900 tracking-wide">
                   Home Page
                 </span>
-                <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-[#ff6b00]/10 text-[#ff6b00] border border-[#ff6b00]/20">
-                  Active
-                </span>
-              </div>
 
-              {/* Arrow Indicator */}
-              <div className="text-slate-400">
-                {homeDropdownOpen ? (
-                  <ChevronDown className="w-4 h-4 text-[#ff6b00]" />
-                ) : (
-                  <ChevronRight className="w-4 h-4 text-slate-400" />
-                )}
-              </div>
-            </button>
+                {/* Arrow Indicator */}
+                <div className="text-slate-400">
+                  {homeDropdownOpen ? (
+                    <ChevronDown className="w-4 h-4 text-[#ff6b00]" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  )}
+                </div>
+              </button>
 
               {/* SECTIONS LIST INSIDE DROPDOWN - Pure clean text rows */}
               {homeDropdownOpen && (
@@ -245,14 +234,9 @@ export function Sidebar({ currentTab = "overview", setCurrentTab }: SidebarProps
                 onClick={() => setAboutDropdownOpen(!aboutDropdownOpen)}
                 className="w-full flex items-center justify-between px-4 py-3 text-left transition-colors cursor-pointer bg-white hover:bg-slate-50 border-b border-slate-200"
               >
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-slate-900 tracking-wide">
-                    About Page
-                  </span>
-                  <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-[#0056b3]/10 text-[#0056b3] border border-[#0056b3]/20">
-                    Live
-                  </span>
-                </div>
+                <span className="text-xs font-bold text-slate-900 tracking-wide">
+                  About Page
+                </span>
 
                 {/* Arrow Indicator */}
                 <div className="text-slate-400">
@@ -291,27 +275,6 @@ export function Sidebar({ currentTab = "overview", setCurrentTab }: SidebarProps
                 </div>
               )}
             </div>
-          </div>
-        </div>
-
-        {/* Quick Links */}
-        <div>
-          <div className="px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-            Preview & Links
-          </div>
-          <div className="space-y-1">
-            <a
-              href="http://localhost:3000"
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-700 hover:text-[#0056b3] hover:bg-slate-100 transition-all group"
-            >
-              <div className="flex items-center gap-2">
-                <ExternalLink className="w-4 h-4 text-[#ff6b00]" />
-                <span>Open Live Website (3000)</span>
-              </div>
-              <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
-            </a>
           </div>
         </div>
       </div>
