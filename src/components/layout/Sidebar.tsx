@@ -20,9 +20,23 @@ interface SidebarProps {
 
 export function Sidebar({ currentTab = "overview", setCurrentTab }: SidebarProps) {
   const router = useRouter();
-  const [siteDropdownOpen, setSiteDropdownOpen] = useState(true);
-  const [homeDropdownOpen, setHomeDropdownOpen] = useState(true);
-  const [aboutDropdownOpen, setAboutDropdownOpen] = useState(false);
+  const isAboutTab = currentTab.startsWith("about-");
+  const isSiteTab = currentTab.startsWith("site-");
+
+  const [siteDropdownOpen, setSiteDropdownOpen] = useState<boolean>(true);
+  const [homeDropdownOpen, setHomeDropdownOpen] = useState<boolean>(!isAboutTab);
+  const [aboutDropdownOpen, setAboutDropdownOpen] = useState<boolean>(isAboutTab);
+
+  // Auto-expand accordion if tab changes to that section
+  React.useEffect(() => {
+    if (currentTab.startsWith("about-")) {
+      setAboutDropdownOpen(true);
+    } else if (currentTab.startsWith("site-")) {
+      setSiteDropdownOpen(true);
+    } else if (currentTab !== "overview") {
+      setHomeDropdownOpen(true);
+    }
+  }, [currentTab]);
 
   const handleLogout = async () => {
     try {

@@ -46,6 +46,30 @@ export default function DashboardPage() {
   const [aboutData, setAboutData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Restore currentTab from URL hash or localStorage on initial client mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const hash = window.location.hash.replace("#", "");
+      if (hash) {
+        setCurrentTab(hash);
+      } else {
+        const storedTab = localStorage.getItem("admin_current_tab");
+        if (storedTab) {
+          setCurrentTab(storedTab);
+        }
+      }
+    }
+  }, []);
+
+  // Update hash and localStorage whenever currentTab changes
+  const handleTabChange = (tab: string) => {
+    setCurrentTab(tab);
+    if (typeof window !== "undefined") {
+      window.location.hash = tab;
+      localStorage.setItem("admin_current_tab", tab);
+    }
+  };
+
   const loadData = async () => {
     try {
       setLoading(true);
@@ -196,7 +220,7 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-[#f8fafc] text-slate-900 flex font-sans">
       {/* Clean White Sidebar */}
-      <Sidebar currentTab={currentTab} setCurrentTab={setCurrentTab} />
+      <Sidebar currentTab={currentTab} setCurrentTab={handleTabChange} />
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
@@ -206,7 +230,7 @@ export default function DashboardPage() {
           savedToast={savedToast}
           onRefresh={loadData}
           currentSectionTitle={getSectionTitle()}
-          onSelectTab={setCurrentTab}
+          onSelectTab={handleTabChange}
         />
 
         <main className="flex-1 p-6 md:p-8 overflow-y-auto max-w-7xl mx-auto w-full">
