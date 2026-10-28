@@ -286,14 +286,9 @@ export function Sidebar({ currentTab = "overview", setCurrentTab }: SidebarProps
                 onClick={() => setProductDropdownOpen(!productDropdownOpen)}
                 className="w-full flex items-center justify-between px-4 py-3 text-left transition-colors cursor-pointer bg-white hover:bg-slate-50 border-b border-slate-200"
               >
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-slate-900 tracking-wide">
-                    Product Page
-                  </span>
-                  <span className="px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-blue-100 text-[#0056b3]">
-                    3 Cat • 9 Prod
-                  </span>
-                </div>
+                <span className="text-xs font-bold text-slate-900 tracking-wide">
+                  Product Page
+                </span>
 
                 <div className="text-slate-400">
                   {productDropdownOpen ? (
@@ -315,18 +310,7 @@ export function Sidebar({ currentTab = "overview", setCurrentTab }: SidebarProps
                         : "text-slate-700 hover:text-slate-900 hover:bg-slate-100 font-medium"
                     }`}
                   >
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs">Category</span>
-                      <span
-                        className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
-                          currentTab === "product-categories"
-                            ? "bg-white/20 text-white"
-                            : "bg-slate-100 text-slate-600"
-                        }`}
-                      >
-                        3 Categories
-                      </span>
-                    </div>
+                    <span className="text-xs">Category</span>
                     {currentTab === "product-categories" && (
                       <span className="w-1.5 h-1.5 rounded-full bg-[#ff6b00] shrink-0" />
                     )}
@@ -341,18 +325,7 @@ export function Sidebar({ currentTab = "overview", setCurrentTab }: SidebarProps
                         : "text-slate-700 hover:text-slate-900 hover:bg-slate-100 font-medium"
                     }`}
                   >
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs">Sub Category</span>
-                      <span
-                        className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
-                          currentTab === "product-list"
-                            ? "bg-white/20 text-white"
-                            : "bg-slate-100 text-slate-600"
-                        }`}
-                      >
-                        9 Products & SEO
-                      </span>
-                    </div>
+                    <span className="text-xs">Sub Category</span>
                     {currentTab === "product-list" && (
                       <span className="w-1.5 h-1.5 rounded-full bg-[#ff6b00] shrink-0" />
                     )}
