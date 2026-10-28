@@ -22,10 +22,12 @@ export function Sidebar({ currentTab = "overview", setCurrentTab }: SidebarProps
   const router = useRouter();
   const isAboutTab = currentTab.startsWith("about-");
   const isSiteTab = currentTab.startsWith("site-");
+  const isProductTab = currentTab.startsWith("product-");
 
   const [siteDropdownOpen, setSiteDropdownOpen] = useState<boolean>(true);
-  const [homeDropdownOpen, setHomeDropdownOpen] = useState<boolean>(!isAboutTab);
+  const [homeDropdownOpen, setHomeDropdownOpen] = useState<boolean>(!isAboutTab && !isProductTab);
   const [aboutDropdownOpen, setAboutDropdownOpen] = useState<boolean>(isAboutTab);
+  const [productDropdownOpen, setProductDropdownOpen] = useState<boolean>(isProductTab);
 
   // Auto-expand accordion if tab changes to that section
   React.useEffect(() => {
@@ -33,6 +35,8 @@ export function Sidebar({ currentTab = "overview", setCurrentTab }: SidebarProps
       setAboutDropdownOpen(true);
     } else if (currentTab.startsWith("site-")) {
       setSiteDropdownOpen(true);
+    } else if (currentTab.startsWith("product-")) {
+      setProductDropdownOpen(true);
     } else if (currentTab !== "overview") {
       setHomeDropdownOpen(true);
     }
@@ -272,6 +276,87 @@ export function Sidebar({ currentTab = "overview", setCurrentTab }: SidebarProps
                       </button>
                     );
                   })}
+                </div>
+              )}
+            </div>
+
+            {/* 4. PRODUCT PAGE WITH DROPDOWN (CATEGORY & SUB CATEGORY) */}
+            <div className="rounded-2xl border border-slate-200 bg-slate-50/60 overflow-hidden shadow-xs">
+              <button
+                onClick={() => setProductDropdownOpen(!productDropdownOpen)}
+                className="w-full flex items-center justify-between px-4 py-3 text-left transition-colors cursor-pointer bg-white hover:bg-slate-50 border-b border-slate-200"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-slate-900 tracking-wide">
+                    Product Page
+                  </span>
+                  <span className="px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-blue-100 text-[#0056b3]">
+                    3 Cat • 9 Prod
+                  </span>
+                </div>
+
+                <div className="text-slate-400">
+                  {productDropdownOpen ? (
+                    <ChevronDown className="w-4 h-4 text-[#ff6b00]" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  )}
+                </div>
+              </button>
+
+              {productDropdownOpen && (
+                <div className="p-1.5 space-y-1 bg-white">
+                  {/* Category Link */}
+                  <button
+                    onClick={() => setCurrentTab && setCurrentTab("product-categories")}
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                      currentTab === "product-categories"
+                        ? "bg-[#0056b3] text-white shadow-xs font-bold"
+                        : "text-slate-700 hover:text-slate-900 hover:bg-slate-100 font-medium"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs">Category</span>
+                      <span
+                        className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
+                          currentTab === "product-categories"
+                            ? "bg-white/20 text-white"
+                            : "bg-slate-100 text-slate-600"
+                        }`}
+                      >
+                        3 Categories
+                      </span>
+                    </div>
+                    {currentTab === "product-categories" && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#ff6b00] shrink-0" />
+                    )}
+                  </button>
+
+                  {/* Sub Category / Products Link */}
+                  <button
+                    onClick={() => setCurrentTab && setCurrentTab("product-list")}
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                      currentTab === "product-list"
+                        ? "bg-[#0056b3] text-white shadow-xs font-bold"
+                        : "text-slate-700 hover:text-slate-900 hover:bg-slate-100 font-medium"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs">Sub Category</span>
+                      <span
+                        className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
+                          currentTab === "product-list"
+                            ? "bg-white/20 text-white"
+                            : "bg-slate-100 text-slate-600"
+                        }`}
+                      >
+                        9 Products & SEO
+                      </span>
+                    </div>
+                    {currentTab === "product-list" && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#ff6b00] shrink-0" />
+                    )}
+                  </button>
                 </div>
               )}
             </div>

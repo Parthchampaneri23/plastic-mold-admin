@@ -37,6 +37,12 @@ import {
   AboutFaqEditor,
 } from "@/components/about";
 
+// Product Page Editors (Category & Sub Category Products)
+import {
+  ProductCategoriesEditor,
+  ProductListEditor,
+} from "@/components/products";
+
 export default function DashboardPage() {
   const [currentTab, setCurrentTab] = useState("hero");
   const [loading, setLoading] = useState(true);
@@ -44,6 +50,8 @@ export default function DashboardPage() {
   const [savedToast, setSavedToast] = useState(false);
   const [data, setData] = useState<any>(null);
   const [aboutData, setAboutData] = useState<any>(null);
+  const [productsData, setProductsData] = useState<any>(null);
+  const [selectedProductId, setSelectedProductId] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
 
   // Restore currentTab from URL hash or localStorage on initial client mount
@@ -95,6 +103,16 @@ export default function DashboardPage() {
       if (aboutJson.success && aboutJson.data) {
         setAboutData(aboutJson.data);
       }
+
+      // Load Products Page Data
+      const productsRes = await fetch("/api/products");
+      const productsJson = await productsRes.json();
+      if (productsJson.success && productsJson.data) {
+        setProductsData(productsJson.data);
+        if (productsJson.data.products?.length > 0 && !selectedProductId) {
+          setSelectedProductId(productsJson.data.products[0].id || productsJson.data.products[0].slug);
+        }
+      }
     } catch (err: any) {
       setError(err?.message || "Failed to load content");
     } finally {
@@ -112,8 +130,24 @@ export default function DashboardPage() {
       setError(null);
 
       const isAboutSection = currentTab.startsWith("about-");
+      const isProductSection = currentTab.startsWith("product-");
 
-      if (isAboutSection) {
+      if (isProductSection) {
+        // Save Products Page Content
+        const res = await fetch("/api/products", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(productsData),
+        });
+        const resJson = await res.json();
+        if (resJson.success) {
+          setProductsData(resJson.data);
+          setSavedToast(true);
+          setTimeout(() => setSavedToast(false), 3000);
+        } else {
+          setError(resJson.message || "Failed to save Product page content.");
+        }
+      } else if (isAboutSection) {
         // Save About Us Content
         const res = await fetch("/api/about", {
           method: "PUT",
@@ -200,6 +234,12 @@ export default function DashboardPage() {
         return "About Page / 6. Quality Commitment 5 Stages";
       case "about-faqs":
         return "About Page / 7. Company FAQs";
+
+      // Product Page Sections
+      case "product-categories":
+        return "Product Page / Category Architecture (3 Core Categories)";
+      case "product-list":
+        return "Product Page / Sub Category Catalog (9 Products & SEO)";
 
       default:
         return "Dashboard Overview";
@@ -312,13 +352,36 @@ export default function DashboardPage() {
             <AboutFaqEditor aboutData={aboutData} setAboutData={setAboutData} />
           )}
 
+          {/* PRODUCT PAGE: CATEGORY (3 CORE CATEGORIES) */}
+          {currentTab === "product-categories" && productsData && (
+            <ProductCategoriesEditor
+              categories={productsData.categories || []}
+              onChange={(cats) =>
+                setProductsData({ ...productsData, categories: cats })
+              }
+            />
+          )}
+
+          {/* PRODUCT PAGE: SUB CATEGORY (9 PRODUCTS & SEO) */}
+          {currentTab === "product-list" && productsData && (
+            <ProductListEditor
+              products={productsData.products || []}
+              categories={productsData.categories || []}
+              selectedProductId={selectedProductId}
+              onSelectProduct={(id) => setSelectedProductId(id)}
+              onChange={(prods) =>
+                setProductsData({ ...productsData, products: prods })
+              }
+            />
+          )}
+
           {/* OVERVIEW TAB */}
           {currentTab === "overview" && (
             <div className="space-y-6">
               <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm">
                 <h1 className="text-2xl font-black text-slate-900">Patel Mould Control Dashboard</h1>
                 <p className="text-xs text-slate-500 mt-1">
-                  Select <strong className="text-[#ff6b00]">Home Page</strong> on the sidebar to expand its dropdown and edit any section.
+                  Select <strong className="text-[#ff6b00]">Home Page</strong>, <strong className="text-[#0056b3]">About Page</strong>, or <strong className="text-[#ff6b00]">Product Page</strong> on the sidebar to manage all dynamic content, categories, products, and SEO.
                 </p>
               </div>
             </div>
