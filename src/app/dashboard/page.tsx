@@ -57,6 +57,22 @@ import {
   ManufacturingCtaEditor,
 } from "@/components/manufacturing";
 
+// Infrastructure Page Editors
+import {
+  InfrastructureHeroEditor,
+  FacilityOverviewEditor,
+  CncMachiningEditor,
+  EdmMachiningEditor,
+  MouldAssemblyEditor,
+  QualityInspectionEditor as InfraQualityInspectionEditor,
+  TestingValidationEditor,
+  WarehouseLogisticsEditor,
+  EngineeringDesignEditor,
+  GenericInfraSectionEditor,
+  InfrastructureFaqEditor,
+  InfrastructureCtaEditor,
+} from "@/components/infrastructure";
+
 export default function DashboardPage() {
   const [currentTab, setCurrentTab] = useState("hero");
   const [loading, setLoading] = useState(true);
@@ -66,6 +82,7 @@ export default function DashboardPage() {
   const [aboutData, setAboutData] = useState<any>(null);
   const [productsData, setProductsData] = useState<any>(null);
   const [manufacturingData, setManufacturingData] = useState<any>(null);
+  const [infrastructureData, setInfrastructureData] = useState<any>(null);
   const [selectedProductId, setSelectedProductId] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
 
@@ -135,6 +152,13 @@ export default function DashboardPage() {
       if (mfgJson.success && mfgJson.data) {
         setManufacturingData(mfgJson.data);
       }
+
+      // Load Infrastructure Page Data
+      const infraRes = await fetch("/api/infrastructure");
+      const infraJson = await infraRes.json();
+      if (infraJson.success && infraJson.data) {
+        setInfrastructureData(infraJson.data);
+      }
     } catch (err: any) {
       setError(err?.message || "Failed to load content");
     } finally {
@@ -154,8 +178,24 @@ export default function DashboardPage() {
       const isAboutSection = currentTab.startsWith("about-");
       const isProductSection = currentTab.startsWith("product-");
       const isMfgSection = currentTab.startsWith("mfg-");
+      const isInfraSection = currentTab.startsWith("infra-");
 
-      if (isMfgSection) {
+      if (isInfraSection) {
+        // Save Infrastructure Page Content
+        const res = await fetch("/api/infrastructure", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(infrastructureData),
+        });
+        const resJson = await res.json();
+        if (resJson.success) {
+          setInfrastructureData(resJson.data);
+          setSavedToast(true);
+          setTimeout(() => setSavedToast(false), 3000);
+        } else {
+          setError(resJson.error || "Failed to save Infrastructure page content.");
+        }
+      } else if (isMfgSection) {
         // Save Manufacturing Page Content
         const res = await fetch("/api/manufacturing", {
           method: "PUT",
@@ -298,6 +338,32 @@ export default function DashboardPage() {
         return "Manufacturing / 8. Quality & Metrology Standards";
       case "mfg-solutions":
         return "Manufacturing / 9. Custom Mold Solutions";
+      case "mfg-cta":
+        return "Manufacturing / 10. Technical Consultation CTA";
+
+      // Infrastructure Page Sections
+      case "infra-hero":
+        return "Infrastructure / 1. Hero Banner & Breadcrumb";
+      case "infra-overview":
+        return "Infrastructure / 2. Facility Overview & Zones";
+      case "infra-cnc":
+        return "Infrastructure / 3. CNC Machining Center";
+      case "infra-edm":
+        return "Infrastructure / 4. EDM Spark Erosion";
+      case "infra-assembly":
+        return "Infrastructure / 5. Mould Assembly & Fitting";
+      case "infra-quality":
+        return "Infrastructure / 6. Quality Metrology Lab";
+      case "infra-testing":
+        return "Infrastructure / 7. Testing & Validation Trials";
+      case "infra-warehouse":
+        return "Infrastructure / 8. Storage & Material Logistics";
+      case "infra-design":
+        return "Infrastructure / 9. Engineering CAD/CAM Design";
+      case "infra-faqs":
+        return "Infrastructure / 10. Infrastructure FAQs";
+      case "infra-cta":
+        return "Infrastructure / 11. Partnership CTA Banner";
 
       default:
         return "Dashboard Overview";
@@ -529,6 +595,120 @@ export default function DashboardPage() {
               data={manufacturingData.customSolutions || {}}
               onChange={(customSolutions) =>
                 setManufacturingData({ ...manufacturingData, customSolutions })
+              }
+            />
+          )}
+
+          {/* ======================================================== */}
+          {/* INFRASTRUCTURE PAGE EDITORS (11 SECTIONS)                */}
+          {/* ======================================================== */}
+
+          {/* INFRASTRUCTURE: SECTION 1 - HERO BANNER */}
+          {currentTab === "infra-hero" && infrastructureData && (
+            <InfrastructureHeroEditor
+              data={infrastructureData.hero || {}}
+              onChange={(hero) =>
+                setInfrastructureData({ ...infrastructureData, hero })
+              }
+            />
+          )}
+
+          {/* INFRASTRUCTURE: SECTION 2 - FACILITY OVERVIEW */}
+          {currentTab === "infra-overview" && infrastructureData && (
+            <FacilityOverviewEditor
+              data={infrastructureData.facilityOverview || {}}
+              onChange={(facilityOverview) =>
+                setInfrastructureData({ ...infrastructureData, facilityOverview })
+              }
+            />
+          )}
+
+          {/* INFRASTRUCTURE: SECTION 3 - CNC MACHINING */}
+          {currentTab === "infra-cnc" && infrastructureData && (
+            <CncMachiningEditor
+              data={infrastructureData.cnc || {}}
+              onChange={(cnc) =>
+                setInfrastructureData({ ...infrastructureData, cnc })
+              }
+            />
+          )}
+
+          {/* INFRASTRUCTURE: SECTION 4 - EDM MACHINING */}
+          {currentTab === "infra-edm" && infrastructureData && (
+            <EdmMachiningEditor
+              data={infrastructureData.edm || {}}
+              onChange={(edm) =>
+                setInfrastructureData({ ...infrastructureData, edm })
+              }
+            />
+          )}
+
+          {/* INFRASTRUCTURE: SECTION 5 - MOULD ASSEMBLY & FITTING */}
+          {currentTab === "infra-assembly" && infrastructureData && (
+            <MouldAssemblyEditor
+              data={infrastructureData.mouldAssembly || {}}
+              onChange={(mouldAssembly) =>
+                setInfrastructureData({ ...infrastructureData, mouldAssembly })
+              }
+            />
+          )}
+
+          {/* INFRASTRUCTURE: SECTION 6 - QUALITY INSPECTION */}
+          {currentTab === "infra-quality" && infrastructureData && (
+            <InfraQualityInspectionEditor
+              data={infrastructureData.qualityInspection || {}}
+              onChange={(qualityInspection) =>
+                setInfrastructureData({ ...infrastructureData, qualityInspection })
+              }
+            />
+          )}
+
+          {/* INFRASTRUCTURE: SECTION 7 - TESTING & VALIDATION */}
+          {currentTab === "infra-testing" && infrastructureData && (
+            <TestingValidationEditor
+              data={infrastructureData.testingValidation || {}}
+              onChange={(testingValidation) =>
+                setInfrastructureData({ ...infrastructureData, testingValidation })
+              }
+            />
+          )}
+
+          {/* INFRASTRUCTURE: SECTION 8 - WAREHOUSE & MATERIAL HANDLING */}
+          {currentTab === "infra-warehouse" && infrastructureData && (
+            <WarehouseLogisticsEditor
+              data={infrastructureData.warehouseLogistics || {}}
+              onChange={(warehouseLogistics) =>
+                setInfrastructureData({ ...infrastructureData, warehouseLogistics })
+              }
+            />
+          )}
+
+          {/* INFRASTRUCTURE: SECTION 9 - ENGINEERING DESIGN */}
+          {currentTab === "infra-design" && infrastructureData && (
+            <EngineeringDesignEditor
+              data={infrastructureData.engineeringDesign || {}}
+              onChange={(engineeringDesign) =>
+                setInfrastructureData({ ...infrastructureData, engineeringDesign })
+              }
+            />
+          )}
+
+          {/* INFRASTRUCTURE: SECTION 10 - FAQS */}
+          {currentTab === "infra-faqs" && infrastructureData && (
+            <InfrastructureFaqEditor
+              data={infrastructureData.faqs || {}}
+              onChange={(faqs) =>
+                setInfrastructureData({ ...infrastructureData, faqs })
+              }
+            />
+          )}
+
+          {/* INFRASTRUCTURE: SECTION 11 - CTA PARTNERSHIP BANNER */}
+          {currentTab === "infra-cta" && infrastructureData && (
+            <InfrastructureCtaEditor
+              data={infrastructureData.cta || {}}
+              onChange={(cta) =>
+                setInfrastructureData({ ...infrastructureData, cta })
               }
             />
           )}

@@ -24,12 +24,14 @@ export function Sidebar({ currentTab = "overview", setCurrentTab }: SidebarProps
   const isSiteTab = currentTab.startsWith("site-");
   const isProductTab = currentTab.startsWith("product-");
   const isManufacturingTab = currentTab.startsWith("mfg-");
+  const isInfrastructureTab = currentTab.startsWith("infra-");
 
   const [siteDropdownOpen, setSiteDropdownOpen] = useState<boolean>(true);
-  const [homeDropdownOpen, setHomeDropdownOpen] = useState<boolean>(!isAboutTab && !isProductTab && !isManufacturingTab);
+  const [homeDropdownOpen, setHomeDropdownOpen] = useState<boolean>(!isAboutTab && !isProductTab && !isManufacturingTab && !isInfrastructureTab);
   const [aboutDropdownOpen, setAboutDropdownOpen] = useState<boolean>(isAboutTab);
   const [productDropdownOpen, setProductDropdownOpen] = useState<boolean>(isProductTab);
   const [manufacturingDropdownOpen, setManufacturingDropdownOpen] = useState<boolean>(isManufacturingTab);
+  const [infraDropdownOpen, setInfraDropdownOpen] = useState<boolean>(isInfrastructureTab);
 
   // Auto-expand accordion if tab changes to that section
   React.useEffect(() => {
@@ -41,6 +43,8 @@ export function Sidebar({ currentTab = "overview", setCurrentTab }: SidebarProps
       setProductDropdownOpen(true);
     } else if (currentTab.startsWith("mfg-")) {
       setManufacturingDropdownOpen(true);
+    } else if (currentTab.startsWith("infra-")) {
+      setInfraDropdownOpen(true);
     } else if (currentTab !== "overview") {
       setHomeDropdownOpen(true);
     }
@@ -94,6 +98,21 @@ export function Sidebar({ currentTab = "overview", setCurrentTab }: SidebarProps
     { id: "mfg-quality", label: "8. Quality & Metrology Standards" },
     { id: "mfg-solutions", label: "9. Custom Mold Solutions" },
     { id: "mfg-cta", label: "10. Technical Consultation CTA" },
+  ];
+
+  // Clean list of Infrastructure page sections
+  const infrastructureSections = [
+    { id: "infra-hero", label: "1. Hero Banner & Breadcrumb" },
+    { id: "infra-overview", label: "2. Facility Overview & Zones" },
+    { id: "infra-cnc", label: "3. CNC Machining Center" },
+    { id: "infra-edm", label: "4. EDM Spark Erosion" },
+    { id: "infra-assembly", label: "5. Mould Assembly & Fitting" },
+    { id: "infra-quality", label: "6. Quality Metrology Lab" },
+    { id: "infra-testing", label: "7. Testing & Validation Trials" },
+    { id: "infra-warehouse", label: "8. Storage & Material Logistics" },
+    { id: "infra-design", label: "9. Engineering CAD/CAM Design" },
+    { id: "infra-faqs", label: "10. Infrastructure FAQs" },
+    { id: "infra-cta", label: "11. Partnership CTA Banner" },
   ];
 
   return (
@@ -375,6 +394,51 @@ export function Sidebar({ currentTab = "overview", setCurrentTab }: SidebarProps
               {manufacturingDropdownOpen && (
                 <div className="p-1.5 space-y-1 bg-white">
                   {manufacturingSections.map((sec) => {
+                    const isActive = currentTab === sec.id;
+                    return (
+                      <button
+                        key={sec.id}
+                        onClick={() => setCurrentTab && setCurrentTab(sec.id)}
+                        className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                          isActive
+                            ? "bg-[#0056b3] text-white shadow-xs font-bold"
+                            : "text-slate-700 hover:text-slate-900 hover:bg-slate-100 font-medium"
+                        }`}
+                      >
+                        <span className="text-xs truncate">{sec.label}</span>
+                        {isActive && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#ff6b00] shrink-0" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* 6. INFRASTRUCTURE PAGE WITH DROPDOWN (ALL 11 SECTIONS) */}
+            <div className="rounded-2xl border border-slate-200 bg-slate-50/60 overflow-hidden shadow-xs">
+              <button
+                onClick={() => setInfraDropdownOpen(!infraDropdownOpen)}
+                className="w-full flex items-center justify-between px-4 py-3 text-left transition-colors cursor-pointer bg-white hover:bg-slate-50 border-b border-slate-200"
+              >
+                <span className="text-xs font-bold text-slate-900 tracking-wide">
+                  Infrastructure Page
+                </span>
+
+                <div className="text-slate-400">
+                  {infraDropdownOpen ? (
+                    <ChevronDown className="w-4 h-4 text-[#ff6b00]" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  )}
+                </div>
+              </button>
+
+              {/* SECTIONS LIST INSIDE DROPDOWN - Pure clean text rows */}
+              {infraDropdownOpen && (
+                <div className="p-1.5 space-y-1 bg-white">
+                  {infrastructureSections.map((sec) => {
                     const isActive = currentTab === sec.id;
                     return (
                       <button
