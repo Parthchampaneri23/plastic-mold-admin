@@ -43,6 +43,20 @@ import {
   ProductListEditor,
 } from "@/components/products";
 
+// Manufacturing Page Editors
+import {
+  ManufacturingHeroEditor,
+  ManufacturingOverviewEditor,
+  DesignDevelopmentEditor,
+  PrecisionMachiningEditor,
+  ManufacturingProcessEditor,
+  MachineryEquipmentEditor,
+  ProductionCapacityEditor,
+  QualityInspectionEditor,
+  CustomSolutionsEditor,
+  ManufacturingCtaEditor,
+} from "@/components/manufacturing";
+
 export default function DashboardPage() {
   const [currentTab, setCurrentTab] = useState("hero");
   const [loading, setLoading] = useState(true);
@@ -51,6 +65,7 @@ export default function DashboardPage() {
   const [data, setData] = useState<any>(null);
   const [aboutData, setAboutData] = useState<any>(null);
   const [productsData, setProductsData] = useState<any>(null);
+  const [manufacturingData, setManufacturingData] = useState<any>(null);
   const [selectedProductId, setSelectedProductId] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
 
@@ -113,6 +128,13 @@ export default function DashboardPage() {
           setSelectedProductId(productsJson.data.products[0].id || productsJson.data.products[0].slug);
         }
       }
+
+      // Load Manufacturing Page Data
+      const mfgRes = await fetch("/api/manufacturing");
+      const mfgJson = await mfgRes.json();
+      if (mfgJson.success && mfgJson.data) {
+        setManufacturingData(mfgJson.data);
+      }
     } catch (err: any) {
       setError(err?.message || "Failed to load content");
     } finally {
@@ -131,8 +153,24 @@ export default function DashboardPage() {
 
       const isAboutSection = currentTab.startsWith("about-");
       const isProductSection = currentTab.startsWith("product-");
+      const isMfgSection = currentTab.startsWith("mfg-");
 
-      if (isProductSection) {
+      if (isMfgSection) {
+        // Save Manufacturing Page Content
+        const res = await fetch("/api/manufacturing", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(manufacturingData),
+        });
+        const resJson = await res.json();
+        if (resJson.success) {
+          setManufacturingData(resJson.data);
+          setSavedToast(true);
+          setTimeout(() => setSavedToast(false), 3000);
+        } else {
+          setError(resJson.error || "Failed to save Manufacturing page content.");
+        }
+      } else if (isProductSection) {
         // Save Products Page Content
         const res = await fetch("/api/products", {
           method: "PUT",
@@ -240,6 +278,26 @@ export default function DashboardPage() {
         return "Product Page / Category Architecture (3 Core Categories)";
       case "product-list":
         return "Product Page / Sub Category Catalog (9 Products & SEO)";
+
+      // Manufacturing Page Sections
+      case "mfg-hero":
+        return "Manufacturing / 1. Hero Banner & Tag";
+      case "mfg-overview":
+        return "Manufacturing / 2. Overview & Facility Stats";
+      case "mfg-design":
+        return "Manufacturing / 3. Mold Design & DFM R&D";
+      case "mfg-machining":
+        return "Manufacturing / 4. Precision Machining Tabs";
+      case "mfg-process":
+        return "Manufacturing / 5. 9-Stage Mould Making Process";
+      case "mfg-machinery":
+        return "Manufacturing / 6. Machinery & Equipment List";
+      case "mfg-capacity":
+        return "Manufacturing / 7. Production Capacity & Scale";
+      case "mfg-quality":
+        return "Manufacturing / 8. Quality & Metrology Standards";
+      case "mfg-solutions":
+        return "Manufacturing / 9. Custom Mold Solutions";
 
       default:
         return "Dashboard Overview";
@@ -371,6 +429,106 @@ export default function DashboardPage() {
               onSelectProduct={(id) => setSelectedProductId(id)}
               onChange={(prods) =>
                 setProductsData({ ...productsData, products: prods })
+              }
+            />
+          )}
+
+          {/* MANUFACTURING PAGE: SECTION 1 - HERO */}
+          {currentTab === "mfg-hero" && manufacturingData && (
+            <ManufacturingHeroEditor
+              data={manufacturingData.hero || {}}
+              onChange={(hero) =>
+                setManufacturingData({ ...manufacturingData, hero })
+              }
+            />
+          )}
+
+          {/* MANUFACTURING PAGE: SECTION 2 - OVERVIEW */}
+          {currentTab === "mfg-overview" && manufacturingData && (
+            <ManufacturingOverviewEditor
+              data={manufacturingData.overview || {}}
+              onChange={(overview) =>
+                setManufacturingData({ ...manufacturingData, overview })
+              }
+            />
+          )}
+
+          {/* MANUFACTURING PAGE: SECTION 3 - MOLD DESIGN */}
+          {currentTab === "mfg-design" && manufacturingData && (
+            <DesignDevelopmentEditor
+              data={manufacturingData.designDevelopment || {}}
+              onChange={(designDevelopment) =>
+                setManufacturingData({ ...manufacturingData, designDevelopment })
+              }
+            />
+          )}
+
+          {/* MANUFACTURING PAGE: SECTION 4 - PRECISION MACHINING */}
+          {currentTab === "mfg-machining" && manufacturingData && (
+            <PrecisionMachiningEditor
+              data={manufacturingData.precisionMachining || {}}
+              onChange={(precisionMachining) =>
+                setManufacturingData({ ...manufacturingData, precisionMachining })
+              }
+            />
+          )}
+
+          {/* MANUFACTURING PAGE: SECTION 5 - PROCESS (9 STAGES) */}
+          {currentTab === "mfg-process" && manufacturingData && (
+            <ManufacturingProcessEditor
+              data={manufacturingData.process || {}}
+              onChange={(process) =>
+                setManufacturingData({ ...manufacturingData, process })
+              }
+            />
+          )}
+
+          {/* MANUFACTURING PAGE: SECTION 6 - MACHINERY & EQUIPMENT */}
+          {currentTab === "mfg-machinery" && manufacturingData && (
+            <MachineryEquipmentEditor
+              data={manufacturingData.machinery || {}}
+              onChange={(machinery) =>
+                setManufacturingData({ ...manufacturingData, machinery })
+              }
+            />
+          )}
+
+          {/* MANUFACTURING PAGE: SECTION 7 - PRODUCTION CAPACITY */}
+          {currentTab === "mfg-capacity" && manufacturingData && (
+            <ProductionCapacityEditor
+              data={manufacturingData.capacity || {}}
+              onChange={(capacity) =>
+                setManufacturingData({ ...manufacturingData, capacity })
+              }
+            />
+          )}
+
+          {/* MANUFACTURING PAGE: SECTION 8 - QUALITY & METROLOGY */}
+          {currentTab === "mfg-quality" && manufacturingData && (
+            <QualityInspectionEditor
+              data={manufacturingData.quality || {}}
+              onChange={(quality) =>
+                setManufacturingData({ ...manufacturingData, quality })
+              }
+            />
+          )}
+
+          {/* MANUFACTURING PAGE: SECTION 9 - CUSTOM SOLUTIONS */}
+          {currentTab === "mfg-solutions" && manufacturingData && (
+            <CustomSolutionsEditor
+              data={manufacturingData.customSolutions || {}}
+              onChange={(customSolutions) =>
+                setManufacturingData({ ...manufacturingData, customSolutions })
+              }
+            />
+          )}
+
+          {/* MANUFACTURING PAGE: SECTION 10 - CTA BANNER */}
+          {currentTab === "mfg-cta" && manufacturingData && (
+            <ManufacturingCtaEditor
+              data={manufacturingData.customSolutions || {}}
+              onChange={(customSolutions) =>
+                setManufacturingData({ ...manufacturingData, customSolutions })
               }
             />
           )}

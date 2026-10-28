@@ -8,9 +8,10 @@ interface ImagePickerProps {
   value: string;
   onChange: (url: string) => void;
   helperText?: string;
+  description?: string;
 }
 
-export function ImagePicker({ label, value, onChange, helperText }: ImagePickerProps) {
+export function ImagePicker({ label, value, onChange, helperText, description }: ImagePickerProps) {
   const [uploading, setUploading] = useState(false);
   const [previewError, setPreviewError] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);

@@ -23,11 +23,13 @@ export function Sidebar({ currentTab = "overview", setCurrentTab }: SidebarProps
   const isAboutTab = currentTab.startsWith("about-");
   const isSiteTab = currentTab.startsWith("site-");
   const isProductTab = currentTab.startsWith("product-");
+  const isManufacturingTab = currentTab.startsWith("mfg-");
 
   const [siteDropdownOpen, setSiteDropdownOpen] = useState<boolean>(true);
-  const [homeDropdownOpen, setHomeDropdownOpen] = useState<boolean>(!isAboutTab && !isProductTab);
+  const [homeDropdownOpen, setHomeDropdownOpen] = useState<boolean>(!isAboutTab && !isProductTab && !isManufacturingTab);
   const [aboutDropdownOpen, setAboutDropdownOpen] = useState<boolean>(isAboutTab);
   const [productDropdownOpen, setProductDropdownOpen] = useState<boolean>(isProductTab);
+  const [manufacturingDropdownOpen, setManufacturingDropdownOpen] = useState<boolean>(isManufacturingTab);
 
   // Auto-expand accordion if tab changes to that section
   React.useEffect(() => {
@@ -37,6 +39,8 @@ export function Sidebar({ currentTab = "overview", setCurrentTab }: SidebarProps
       setSiteDropdownOpen(true);
     } else if (currentTab.startsWith("product-")) {
       setProductDropdownOpen(true);
+    } else if (currentTab.startsWith("mfg-")) {
+      setManufacturingDropdownOpen(true);
     } else if (currentTab !== "overview") {
       setHomeDropdownOpen(true);
     }
@@ -76,6 +80,20 @@ export function Sidebar({ currentTab = "overview", setCurrentTab }: SidebarProps
     { id: "about-infrastructure", label: "5. Toolroom Infrastructure" },
     { id: "about-quality", label: "6. Quality Commitment Journey" },
     { id: "about-faqs", label: "7. About Page FAQs" },
+  ];
+
+  // Clean list of Manufacturing page sections
+  const manufacturingSections = [
+    { id: "mfg-hero", label: "1. Hero Banner & Tag" },
+    { id: "mfg-overview", label: "2. Overview & Facility Stats" },
+    { id: "mfg-design", label: "3. Mold Design & DFM R&D" },
+    { id: "mfg-machining", label: "4. Precision Machining Tabs" },
+    { id: "mfg-process", label: "5. 9-Stage Mould Process" },
+    { id: "mfg-machinery", label: "6. Machinery & Equipment List" },
+    { id: "mfg-capacity", label: "7. Production Capacity & Scale" },
+    { id: "mfg-quality", label: "8. Quality & Metrology Standards" },
+    { id: "mfg-solutions", label: "9. Custom Mold Solutions" },
+    { id: "mfg-cta", label: "10. Technical Consultation CTA" },
   ];
 
   return (
@@ -330,6 +348,51 @@ export function Sidebar({ currentTab = "overview", setCurrentTab }: SidebarProps
                       <span className="w-1.5 h-1.5 rounded-full bg-[#ff6b00] shrink-0" />
                     )}
                   </button>
+                </div>
+              )}
+            </div>
+
+            {/* 5. MANUFACTURING PAGE WITH DROPDOWN (ALL 9 SECTIONS) */}
+            <div className="rounded-2xl border border-slate-200 bg-slate-50/60 overflow-hidden shadow-xs">
+              <button
+                onClick={() => setManufacturingDropdownOpen(!manufacturingDropdownOpen)}
+                className="w-full flex items-center justify-between px-4 py-3 text-left transition-colors cursor-pointer bg-white hover:bg-slate-50 border-b border-slate-200"
+              >
+                <span className="text-xs font-bold text-slate-900 tracking-wide">
+                  Manufacturing Page
+                </span>
+
+                <div className="text-slate-400">
+                  {manufacturingDropdownOpen ? (
+                    <ChevronDown className="w-4 h-4 text-[#ff6b00]" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  )}
+                </div>
+              </button>
+
+              {/* SECTIONS LIST INSIDE DROPDOWN - Pure clean text rows */}
+              {manufacturingDropdownOpen && (
+                <div className="p-1.5 space-y-1 bg-white">
+                  {manufacturingSections.map((sec) => {
+                    const isActive = currentTab === sec.id;
+                    return (
+                      <button
+                        key={sec.id}
+                        onClick={() => setCurrentTab && setCurrentTab(sec.id)}
+                        className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                          isActive
+                            ? "bg-[#0056b3] text-white shadow-xs font-bold"
+                            : "text-slate-700 hover:text-slate-900 hover:bg-slate-100 font-medium"
+                        }`}
+                      >
+                        <span className="text-xs truncate">{sec.label}</span>
+                        {isActive && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#ff6b00] shrink-0" />
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>
