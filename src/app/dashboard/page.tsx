@@ -92,6 +92,13 @@ import {
   QualityStandardsEditor,
 } from "@/components/quality";
 
+// Gallery Page Editors
+import {
+  GalleryHeroIntroEditor,
+  FeaturedCollectionsEditor,
+  GalleryItemsEditor,
+} from "@/components/gallery";
+
 export default function DashboardPage() {
   const [currentTab, setCurrentTab] = useState("hero");
   const [loading, setLoading] = useState(true);
@@ -104,8 +111,10 @@ export default function DashboardPage() {
   const [infrastructureData, setInfrastructureData] = useState<any>(null);
   const [industriesData, setIndustriesData] = useState<any>(null);
   const [qualityData, setQualityData] = useState<any>(null);
+  const [galleryData, setGalleryData] = useState<any>(null);
   const [selectedProductId, setSelectedProductId] = useState<string>("");
   const [selectedIndustryId, setSelectedIndustryId] = useState<string>("");
+  const [selectedGalleryItemId, setSelectedGalleryItemId] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
 
   // Main content container ref to scroll to top on tab switch
@@ -239,6 +248,20 @@ export default function DashboardPage() {
       } catch (e) {
         console.warn("Quality data fetch error:", e);
       }
+
+      // Load Gallery Page Data
+      try {
+        const galRes = await fetch("/api/gallery");
+        const galJson = await galRes.json();
+        if (galJson.success && galJson.data) {
+          setGalleryData(galJson.data);
+          if (galJson.data.items?.length > 0 && !selectedGalleryItemId) {
+            setSelectedGalleryItemId(galJson.data.items[0].id);
+          }
+        }
+      } catch (e) {
+        console.warn("Gallery data fetch error:", e);
+      }
     } catch (err: any) {
       setError(err?.message || "Failed to load content");
     } finally {
@@ -261,6 +284,7 @@ export default function DashboardPage() {
       const isInfraSection = currentTab.startsWith("infra-");
       const isIndustrySection = currentTab.startsWith("industry-");
       const isQualitySection = currentTab.startsWith("quality-");
+      const isGallerySection = currentTab.startsWith("gallery-");
 
       if (isQualitySection) {
         // Save Quality Page Content
@@ -276,6 +300,21 @@ export default function DashboardPage() {
           setTimeout(() => setSavedToast(false), 3000);
         } else {
           setError(resJson.error || "Failed to save Quality page content.");
+        }
+      } else if (isGallerySection) {
+        // Save Gallery Page Content
+        const res = await fetch("/api/gallery", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(galleryData),
+        });
+        const resJson = await res.json();
+        if (resJson.success) {
+          setGalleryData(resJson.data);
+          setSavedToast(true);
+          setTimeout(() => setSavedToast(false), 3000);
+        } else {
+          setError(resJson.error || "Failed to save Gallery page content.");
         }
       } else if (isIndustrySection) {
         // Save Industries Page Content
@@ -501,6 +540,14 @@ export default function DashboardPage() {
         return "Quality & Testing / 8. Measurement Instruments";
       case "quality-standards":
         return "Quality & Testing / 9. Standards & Certifications";
+
+      // Gallery Page Sections
+      case "gallery-hero":
+        return "Gallery / 1. Banner & Portfolio Intro";
+      case "gallery-featured":
+        return "Gallery / 2. Featured Collections (3 Cards)";
+      case "gallery-items":
+        return "Gallery / 3. Gallery Items & Media Library";
 
       default:
         return "Dashboard Overview";
@@ -967,6 +1014,46 @@ export default function DashboardPage() {
               onChange={(standards) =>
                 setQualityData({ ...qualityData, standards })
               }
+            />
+          )}
+
+          {/* ======================================================== */}
+          {/* GALLERY PAGE EDITORS (3 SECTIONS)                        */}
+          {/* ======================================================== */}
+
+          {/* GALLERY: SECTION 1 - HERO BANNER & INTRO */}
+          {currentTab === "gallery-hero" && galleryData && (
+            <GalleryHeroIntroEditor
+              heroBanner={galleryData.heroBanner}
+              intro={galleryData.intro}
+              onHeroChange={(heroBanner) =>
+                setGalleryData({ ...galleryData, heroBanner })
+              }
+              onIntroChange={(intro) =>
+                setGalleryData({ ...galleryData, intro })
+              }
+            />
+          )}
+
+          {/* GALLERY: SECTION 2 - FEATURED COLLECTIONS */}
+          {currentTab === "gallery-featured" && galleryData && (
+            <FeaturedCollectionsEditor
+              collections={galleryData.featuredCollections}
+              onChange={(featuredCollections) =>
+                setGalleryData({ ...galleryData, featuredCollections })
+              }
+            />
+          )}
+
+          {/* GALLERY: SECTION 3 - ITEMS & MEDIA LIBRARY */}
+          {currentTab === "gallery-items" && galleryData && (
+            <GalleryItemsEditor
+              items={galleryData.items}
+              onChange={(items) =>
+                setGalleryData({ ...galleryData, items })
+              }
+              selectedItemId={selectedGalleryItemId}
+              onSelectItem={(id) => setSelectedGalleryItemId(id)}
             />
           )}
 

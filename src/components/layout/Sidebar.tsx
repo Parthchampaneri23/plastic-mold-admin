@@ -27,15 +27,17 @@ export function Sidebar({ currentTab = "overview", setCurrentTab }: SidebarProps
   const isInfrastructureTab = currentTab.startsWith("infra-");
   const isIndustriesTab = currentTab.startsWith("industry-");
   const isQualityTab = currentTab.startsWith("quality-");
+  const isGalleryTab = currentTab.startsWith("gallery-");
 
   const [siteDropdownOpen, setSiteDropdownOpen] = useState<boolean>(true);
-  const [homeDropdownOpen, setHomeDropdownOpen] = useState<boolean>(!isAboutTab && !isProductTab && !isManufacturingTab && !isInfrastructureTab && !isIndustriesTab && !isQualityTab);
+  const [homeDropdownOpen, setHomeDropdownOpen] = useState<boolean>(!isAboutTab && !isProductTab && !isManufacturingTab && !isInfrastructureTab && !isIndustriesTab && !isQualityTab && !isGalleryTab);
   const [aboutDropdownOpen, setAboutDropdownOpen] = useState<boolean>(isAboutTab);
   const [productDropdownOpen, setProductDropdownOpen] = useState<boolean>(isProductTab);
   const [manufacturingDropdownOpen, setManufacturingDropdownOpen] = useState<boolean>(isManufacturingTab);
   const [infraDropdownOpen, setInfraDropdownOpen] = useState<boolean>(isInfrastructureTab);
   const [industriesDropdownOpen, setIndustriesDropdownOpen] = useState<boolean>(isIndustriesTab);
   const [qualityDropdownOpen, setQualityDropdownOpen] = useState<boolean>(isQualityTab);
+  const [galleryDropdownOpen, setGalleryDropdownOpen] = useState<boolean>(isGalleryTab);
 
   // Auto-expand accordion if tab changes to that section
   React.useEffect(() => {
@@ -53,6 +55,8 @@ export function Sidebar({ currentTab = "overview", setCurrentTab }: SidebarProps
       setIndustriesDropdownOpen(true);
     } else if (currentTab.startsWith("quality-")) {
       setQualityDropdownOpen(true);
+    } else if (currentTab.startsWith("gallery-")) {
+      setGalleryDropdownOpen(true);
     } else if (currentTab !== "overview") {
       setHomeDropdownOpen(true);
     }
@@ -140,6 +144,13 @@ export function Sidebar({ currentTab = "overview", setCurrentTab }: SidebarProps
     { id: "quality-testing", label: "7. Mould Testing Journey (3 Phases)" },
     { id: "quality-equipment", label: "8. Measurement Instruments" },
     { id: "quality-standards", label: "9. Standards & Certifications" },
+  ];
+
+  // Clean list of Gallery page sections
+  const gallerySections = [
+    { id: "gallery-hero", label: "1. Banner & Portfolio Intro" },
+    { id: "gallery-featured", label: "2. Featured Collections (3 Cards)" },
+    { id: "gallery-items", label: "3. Gallery Items & Media Library" },
   ];
 
   return (
@@ -556,6 +567,51 @@ export function Sidebar({ currentTab = "overview", setCurrentTab }: SidebarProps
               {qualityDropdownOpen && (
                 <div className="p-1.5 space-y-1 bg-white">
                   {qualitySections.map((sec) => {
+                    const isActive = currentTab === sec.id;
+                    return (
+                      <button
+                        key={sec.id}
+                        onClick={() => setCurrentTab && setCurrentTab(sec.id)}
+                        className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                          isActive
+                            ? "bg-[#0056b3] text-white shadow-xs font-bold"
+                            : "text-slate-700 hover:text-slate-900 hover:bg-slate-100 font-medium"
+                        }`}
+                      >
+                        <span className="text-xs truncate">{sec.label}</span>
+                        {isActive && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#ff6b00] shrink-0" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* 9. GALLERY PAGE WITH DROPDOWN (3 SECTIONS) */}
+            <div className="rounded-2xl border border-slate-200 bg-slate-50/60 overflow-hidden shadow-xs">
+              <button
+                onClick={() => setGalleryDropdownOpen(!galleryDropdownOpen)}
+                className="w-full flex items-center justify-between px-4 py-3 text-left transition-colors cursor-pointer bg-white hover:bg-slate-50 border-b border-slate-200"
+              >
+                <span className="text-xs font-bold text-slate-900 tracking-wide">
+                  Gallery Page
+                </span>
+
+                <div className="text-slate-400">
+                  {galleryDropdownOpen ? (
+                    <ChevronDown className="w-4 h-4 text-[#ff6b00]" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  )}
+                </div>
+              </button>
+
+              {/* SECTIONS LIST INSIDE DROPDOWN */}
+              {galleryDropdownOpen && (
+                <div className="p-1.5 space-y-1 bg-white">
+                  {gallerySections.map((sec) => {
                     const isActive = currentTab === sec.id;
                     return (
                       <button
