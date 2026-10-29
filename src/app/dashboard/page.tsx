@@ -73,6 +73,12 @@ import {
   InfrastructureCtaEditor,
 } from "@/components/infrastructure";
 
+// Industries Page Editors
+import {
+  IndustriesHeroEditor,
+  IndustryListEditor,
+} from "@/components/industries";
+
 export default function DashboardPage() {
   const [currentTab, setCurrentTab] = useState("hero");
   const [loading, setLoading] = useState(true);
@@ -83,7 +89,9 @@ export default function DashboardPage() {
   const [productsData, setProductsData] = useState<any>(null);
   const [manufacturingData, setManufacturingData] = useState<any>(null);
   const [infrastructureData, setInfrastructureData] = useState<any>(null);
+  const [industriesData, setIndustriesData] = useState<any>(null);
   const [selectedProductId, setSelectedProductId] = useState<string>("");
+  const [selectedIndustryId, setSelectedIndustryId] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
 
   // Restore currentTab from URL hash or localStorage on initial client mount
@@ -130,34 +138,64 @@ export default function DashboardPage() {
       }
 
       // Load About Page Data
-      const aboutRes = await fetch("/api/about");
-      const aboutJson = await aboutRes.json();
-      if (aboutJson.success && aboutJson.data) {
-        setAboutData(aboutJson.data);
+      try {
+        const aboutRes = await fetch("/api/about");
+        const aboutJson = await aboutRes.json();
+        if (aboutJson.success && aboutJson.data) {
+          setAboutData(aboutJson.data);
+        }
+      } catch (e) {
+        console.warn("About data fetch error:", e);
       }
 
       // Load Products Page Data
-      const productsRes = await fetch("/api/products");
-      const productsJson = await productsRes.json();
-      if (productsJson.success && productsJson.data) {
-        setProductsData(productsJson.data);
-        if (productsJson.data.products?.length > 0 && !selectedProductId) {
-          setSelectedProductId(productsJson.data.products[0].id || productsJson.data.products[0].slug);
+      try {
+        const productsRes = await fetch("/api/products");
+        const productsJson = await productsRes.json();
+        if (productsJson.success && productsJson.data) {
+          setProductsData(productsJson.data);
+          if (productsJson.data.products?.length > 0 && !selectedProductId) {
+            setSelectedProductId(productsJson.data.products[0].id || productsJson.data.products[0].slug);
+          }
         }
+      } catch (e) {
+        console.warn("Products data fetch error:", e);
       }
 
       // Load Manufacturing Page Data
-      const mfgRes = await fetch("/api/manufacturing");
-      const mfgJson = await mfgRes.json();
-      if (mfgJson.success && mfgJson.data) {
-        setManufacturingData(mfgJson.data);
+      try {
+        const mfgRes = await fetch("/api/manufacturing");
+        const mfgJson = await mfgRes.json();
+        if (mfgJson.success && mfgJson.data) {
+          setManufacturingData(mfgJson.data);
+        }
+      } catch (e) {
+        console.warn("Manufacturing data fetch error:", e);
       }
 
       // Load Infrastructure Page Data
-      const infraRes = await fetch("/api/infrastructure");
-      const infraJson = await infraRes.json();
-      if (infraJson.success && infraJson.data) {
-        setInfrastructureData(infraJson.data);
+      try {
+        const infraRes = await fetch("/api/infrastructure");
+        const infraJson = await infraRes.json();
+        if (infraJson.success && infraJson.data) {
+          setInfrastructureData(infraJson.data);
+        }
+      } catch (e) {
+        console.warn("Infrastructure data fetch error:", e);
+      }
+
+      // Load Industries Page Data
+      try {
+        const indRes = await fetch("/api/industries");
+        const indJson = await indRes.json();
+        if (indJson.success && indJson.data) {
+          setIndustriesData(indJson.data);
+          if (indJson.data.industries?.length > 0 && !selectedIndustryId) {
+            setSelectedIndustryId(indJson.data.industries[0].id || indJson.data.industries[0].slug);
+          }
+        }
+      } catch (e) {
+        console.warn("Industries data fetch error:", e);
       }
     } catch (err: any) {
       setError(err?.message || "Failed to load content");
@@ -179,8 +217,24 @@ export default function DashboardPage() {
       const isProductSection = currentTab.startsWith("product-");
       const isMfgSection = currentTab.startsWith("mfg-");
       const isInfraSection = currentTab.startsWith("infra-");
+      const isIndustrySection = currentTab.startsWith("industry-");
 
-      if (isInfraSection) {
+      if (isIndustrySection) {
+        // Save Industries Page Content
+        const res = await fetch("/api/industries", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(industriesData),
+        });
+        const resJson = await res.json();
+        if (resJson.success) {
+          setIndustriesData(resJson.data);
+          setSavedToast(true);
+          setTimeout(() => setSavedToast(false), 3000);
+        } else {
+          setError(resJson.error || "Failed to save Industries page content.");
+        }
+      } else if (isInfraSection) {
         // Save Infrastructure Page Content
         const res = await fetch("/api/infrastructure", {
           method: "PUT",
@@ -364,6 +418,11 @@ export default function DashboardPage() {
         return "Infrastructure / 10. Infrastructure FAQs";
       case "infra-cta":
         return "Infrastructure / 11. Partnership CTA Banner";
+
+      case "industry-hero":
+        return "Industries / 1. Banner & Grid Intro";
+      case "industry-list":
+        return "Industries / 2. Industry Sectors (8)";
 
       default:
         return "Dashboard Overview";
@@ -710,6 +769,32 @@ export default function DashboardPage() {
               onChange={(cta) =>
                 setInfrastructureData({ ...infrastructureData, cta })
               }
+            />
+          )}
+
+          {/* INDUSTRIES: SECTION 1 - HERO BANNER & GRID INTRO */}
+          {currentTab === "industry-hero" && industriesData && (
+            <IndustriesHeroEditor
+              hero={industriesData.hero}
+              gridSection={industriesData.gridSection}
+              onHeroChange={(hero) =>
+                setIndustriesData({ ...industriesData, hero })
+              }
+              onGridChange={(gridSection) =>
+                setIndustriesData({ ...industriesData, gridSection })
+              }
+            />
+          )}
+
+          {/* INDUSTRIES: SECTION 2 - INDUSTRY SECTORS LIST (8 SECTORS) */}
+          {currentTab === "industry-list" && industriesData && (
+            <IndustryListEditor
+              industries={industriesData.industries || []}
+              onChange={(industries) =>
+                setIndustriesData({ ...industriesData, industries })
+              }
+              selectedIndustryId={selectedIndustryId}
+              onSelectIndustry={(id) => setSelectedIndustryId(id)}
             />
           )}
 

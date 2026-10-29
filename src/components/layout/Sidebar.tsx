@@ -25,13 +25,15 @@ export function Sidebar({ currentTab = "overview", setCurrentTab }: SidebarProps
   const isProductTab = currentTab.startsWith("product-");
   const isManufacturingTab = currentTab.startsWith("mfg-");
   const isInfrastructureTab = currentTab.startsWith("infra-");
+  const isIndustriesTab = currentTab.startsWith("industry-");
 
   const [siteDropdownOpen, setSiteDropdownOpen] = useState<boolean>(true);
-  const [homeDropdownOpen, setHomeDropdownOpen] = useState<boolean>(!isAboutTab && !isProductTab && !isManufacturingTab && !isInfrastructureTab);
+  const [homeDropdownOpen, setHomeDropdownOpen] = useState<boolean>(!isAboutTab && !isProductTab && !isManufacturingTab && !isInfrastructureTab && !isIndustriesTab);
   const [aboutDropdownOpen, setAboutDropdownOpen] = useState<boolean>(isAboutTab);
   const [productDropdownOpen, setProductDropdownOpen] = useState<boolean>(isProductTab);
   const [manufacturingDropdownOpen, setManufacturingDropdownOpen] = useState<boolean>(isManufacturingTab);
   const [infraDropdownOpen, setInfraDropdownOpen] = useState<boolean>(isInfrastructureTab);
+  const [industriesDropdownOpen, setIndustriesDropdownOpen] = useState<boolean>(isIndustriesTab);
 
   // Auto-expand accordion if tab changes to that section
   React.useEffect(() => {
@@ -45,6 +47,8 @@ export function Sidebar({ currentTab = "overview", setCurrentTab }: SidebarProps
       setManufacturingDropdownOpen(true);
     } else if (currentTab.startsWith("infra-")) {
       setInfraDropdownOpen(true);
+    } else if (currentTab.startsWith("industry-")) {
+      setIndustriesDropdownOpen(true);
     } else if (currentTab !== "overview") {
       setHomeDropdownOpen(true);
     }
@@ -113,6 +117,12 @@ export function Sidebar({ currentTab = "overview", setCurrentTab }: SidebarProps
     { id: "infra-design", label: "9. Engineering CAD/CAM Design" },
     { id: "infra-faqs", label: "10. Infrastructure FAQs" },
     { id: "infra-cta", label: "11. Partnership CTA Banner" },
+  ];
+
+  // Clean list of Industries page sections
+  const industriesSections = [
+    { id: "industry-hero", label: "1. Banner & Grid Intro" },
+    { id: "industry-list", label: "2. Industry Sectors (8)" },
   ];
 
   return (
@@ -439,6 +449,51 @@ export function Sidebar({ currentTab = "overview", setCurrentTab }: SidebarProps
               {infraDropdownOpen && (
                 <div className="p-1.5 space-y-1 bg-white">
                   {infrastructureSections.map((sec) => {
+                    const isActive = currentTab === sec.id;
+                    return (
+                      <button
+                        key={sec.id}
+                        onClick={() => setCurrentTab && setCurrentTab(sec.id)}
+                        className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                          isActive
+                            ? "bg-[#0056b3] text-white shadow-xs font-bold"
+                            : "text-slate-700 hover:text-slate-900 hover:bg-slate-100 font-medium"
+                        }`}
+                      >
+                        <span className="text-xs truncate">{sec.label}</span>
+                        {isActive && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#ff6b00] shrink-0" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* 7. INDUSTRIES PAGE WITH DROPDOWN (HERO & SECTORS) */}
+            <div className="rounded-2xl border border-slate-200 bg-slate-50/60 overflow-hidden shadow-xs">
+              <button
+                onClick={() => setIndustriesDropdownOpen(!industriesDropdownOpen)}
+                className="w-full flex items-center justify-between px-4 py-3 text-left transition-colors cursor-pointer bg-white hover:bg-slate-50 border-b border-slate-200"
+              >
+                <span className="text-xs font-bold text-slate-900 tracking-wide">
+                  Industries Page
+                </span>
+
+                <div className="text-slate-400">
+                  {industriesDropdownOpen ? (
+                    <ChevronDown className="w-4 h-4 text-[#ff6b00]" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  )}
+                </div>
+              </button>
+
+              {/* SECTIONS LIST INSIDE DROPDOWN */}
+              {industriesDropdownOpen && (
+                <div className="p-1.5 space-y-1 bg-white">
+                  {industriesSections.map((sec) => {
                     const isActive = currentTab === sec.id;
                     return (
                       <button
