@@ -16,9 +16,12 @@ export const metadata: Metadata = {
   title: "Patel Mould Industries | Admin CMS Portal",
   description: "Administrative control portal for managing Patel Mould Industries website content.",
   icons: {
-    icon: "/icon-192.png",
-    shortcut: "/icon-192.png",
-    apple: "/icon-192.png",
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon.png", type: "image/png" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: "/apple-icon.png",
   },
 };
 
