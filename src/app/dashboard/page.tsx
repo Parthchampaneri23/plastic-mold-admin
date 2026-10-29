@@ -106,6 +106,14 @@ import {
   BlogPostsEditor,
 } from "@/components/blogs";
 
+// Contact Page Editors
+import {
+  ContactHeroEditor,
+  ContactIntroEditor,
+  ContactInquiryEditor,
+  ContactDirectEditor,
+} from "@/components/contact";
+
 export default function DashboardPage() {
   const [currentTab, setCurrentTab] = useState("hero");
   const [loading, setLoading] = useState(true);
@@ -120,6 +128,7 @@ export default function DashboardPage() {
   const [qualityData, setQualityData] = useState<any>(null);
   const [galleryData, setGalleryData] = useState<any>(null);
   const [blogsData, setBlogsData] = useState<any>(null);
+  const [contactData, setContactData] = useState<any>(null);
   const [selectedProductId, setSelectedProductId] = useState<string>("");
   const [selectedIndustryId, setSelectedIndustryId] = useState<string>("");
   const [selectedGalleryItemId, setSelectedGalleryItemId] = useState<string>("");
@@ -285,6 +294,17 @@ export default function DashboardPage() {
       } catch (e) {
         console.warn("Blogs data fetch error:", e);
       }
+
+      // Load Contact Page Data
+      try {
+        const contactRes = await fetch("/api/contact");
+        const contactJson = await contactRes.json();
+        if (contactJson.success && contactJson.data) {
+          setContactData(contactJson.data);
+        }
+      } catch (e) {
+        console.warn("Contact data fetch error:", e);
+      }
     } catch (err: any) {
       setError(err?.message || "Failed to load content");
     } finally {
@@ -309,6 +329,7 @@ export default function DashboardPage() {
       const isQualitySection = currentTab.startsWith("quality-");
       const isGallerySection = currentTab.startsWith("gallery-");
       const isBlogsSection = currentTab.startsWith("blogs-");
+      const isContactSection = currentTab.startsWith("contact-");
 
       if (isQualitySection) {
         // Save Quality Page Content
@@ -324,6 +345,21 @@ export default function DashboardPage() {
           setTimeout(() => setSavedToast(false), 3000);
         } else {
           setError(resJson.error || "Failed to save Quality page content.");
+        }
+      } else if (isContactSection) {
+        // Save Contact Page Content
+        const res = await fetch("/api/contact", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(contactData),
+        });
+        const resJson = await res.json();
+        if (resJson.success) {
+          setContactData(resJson.data);
+          setSavedToast(true);
+          setTimeout(() => setSavedToast(false), 3000);
+        } else {
+          setError(resJson.error || "Failed to save Contact page content.");
         }
       } else if (isBlogsSection) {
         // Save Blogs Page Content
@@ -595,6 +631,16 @@ export default function DashboardPage() {
         return "Blogs / 2. Filter Categories Pills";
       case "blogs-posts":
         return "Blogs / 3. Blog Articles & Technical Editor";
+
+      // Contact Us Page Sections
+      case "contact-hero":
+        return "Contact Us / 1. Banner & Breadcrumbs";
+      case "contact-intro":
+        return "Contact Us / 2. Consultation Intro & Badges";
+      case "contact-inquiry":
+        return "Contact Us / 3. Request a Quote Form & Header";
+      case "contact-direct":
+        return "Contact Us / 4. Direct Contact Form & Google Map";
 
       default:
         return "Dashboard Overview";
@@ -1142,6 +1188,50 @@ export default function DashboardPage() {
               }
               selectedPostId={selectedBlogPostId}
               onSelectPost={(id) => setSelectedBlogPostId(id)}
+            />
+          )}
+
+          {/* ======================================================== */}
+          {/* CONTACT US PAGE EDITORS (4 SECTIONS)                     */}
+          {/* ======================================================== */}
+
+          {/* CONTACT: SECTION 1 - HERO BANNER */}
+          {currentTab === "contact-hero" && contactData && (
+            <ContactHeroEditor
+              heroBanner={contactData.heroBanner}
+              onChange={(heroBanner) =>
+                setContactData({ ...contactData, heroBanner })
+              }
+            />
+          )}
+
+          {/* CONTACT: SECTION 2 - INTRO & TRUST BADGES */}
+          {currentTab === "contact-intro" && contactData && (
+            <ContactIntroEditor
+              intro={contactData.intro}
+              onChange={(intro) =>
+                setContactData({ ...contactData, intro })
+              }
+            />
+          )}
+
+          {/* CONTACT: SECTION 3 - INQUIRY & PROPOSAL DESK */}
+          {currentTab === "contact-inquiry" && contactData && (
+            <ContactInquiryEditor
+              inquiry={contactData.inquiry}
+              onChange={(inquiry) =>
+                setContactData({ ...contactData, inquiry })
+              }
+            />
+          )}
+
+          {/* CONTACT: SECTION 4 - DIRECT CHANNELS & GOOGLE MAP */}
+          {currentTab === "contact-direct" && contactData && (
+            <ContactDirectEditor
+              direct={contactData.direct}
+              onChange={(direct) =>
+                setContactData({ ...contactData, direct })
+              }
             />
           )}
 

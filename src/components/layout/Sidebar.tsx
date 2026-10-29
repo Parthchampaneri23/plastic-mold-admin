@@ -29,9 +29,10 @@ export function Sidebar({ currentTab = "overview", setCurrentTab }: SidebarProps
   const isQualityTab = currentTab.startsWith("quality-");
   const isGalleryTab = currentTab.startsWith("gallery-");
   const isBlogsTab = currentTab.startsWith("blogs-");
+  const isContactTab = currentTab.startsWith("contact-");
 
   const [siteDropdownOpen, setSiteDropdownOpen] = useState<boolean>(true);
-  const [homeDropdownOpen, setHomeDropdownOpen] = useState<boolean>(!isAboutTab && !isProductTab && !isManufacturingTab && !isInfrastructureTab && !isIndustriesTab && !isQualityTab && !isGalleryTab && !isBlogsTab);
+  const [homeDropdownOpen, setHomeDropdownOpen] = useState<boolean>(!isAboutTab && !isProductTab && !isManufacturingTab && !isInfrastructureTab && !isIndustriesTab && !isQualityTab && !isGalleryTab && !isBlogsTab && !isContactTab);
   const [aboutDropdownOpen, setAboutDropdownOpen] = useState<boolean>(isAboutTab);
   const [productDropdownOpen, setProductDropdownOpen] = useState<boolean>(isProductTab);
   const [manufacturingDropdownOpen, setManufacturingDropdownOpen] = useState<boolean>(isManufacturingTab);
@@ -40,6 +41,7 @@ export function Sidebar({ currentTab = "overview", setCurrentTab }: SidebarProps
   const [qualityDropdownOpen, setQualityDropdownOpen] = useState<boolean>(isQualityTab);
   const [galleryDropdownOpen, setGalleryDropdownOpen] = useState<boolean>(isGalleryTab);
   const [blogsDropdownOpen, setBlogsDropdownOpen] = useState<boolean>(isBlogsTab);
+  const [contactDropdownOpen, setContactDropdownOpen] = useState<boolean>(isContactTab);
 
   // Auto-expand accordion if tab changes to that section
   React.useEffect(() => {
@@ -61,6 +63,8 @@ export function Sidebar({ currentTab = "overview", setCurrentTab }: SidebarProps
       setGalleryDropdownOpen(true);
     } else if (currentTab.startsWith("blogs-")) {
       setBlogsDropdownOpen(true);
+    } else if (currentTab.startsWith("contact-")) {
+      setContactDropdownOpen(true);
     } else if (currentTab !== "overview") {
       setHomeDropdownOpen(true);
     }
@@ -162,6 +166,14 @@ export function Sidebar({ currentTab = "overview", setCurrentTab }: SidebarProps
     { id: "blogs-hero", label: "1. Banner & Knowledge Hub Intro" },
     { id: "blogs-categories", label: "2. Filter Categories Pills" },
     { id: "blogs-posts", label: "3. Blog Articles & Technical Editor" },
+  ];
+
+  // Clean list of Contact Us page sections
+  const contactSections = [
+    { id: "contact-hero", label: "1. Banner & Breadcrumbs" },
+    { id: "contact-intro", label: "2. Consultation Intro & Badges" },
+    { id: "contact-inquiry", label: "3. Request a Quote Form & Header" },
+    { id: "contact-direct", label: "4. Direct Contact Form & Google Map" },
   ];
 
   return (
@@ -668,6 +680,51 @@ export function Sidebar({ currentTab = "overview", setCurrentTab }: SidebarProps
               {blogsDropdownOpen && (
                 <div className="p-1.5 space-y-1 bg-white">
                   {blogsSections.map((sec) => {
+                    const isActive = currentTab === sec.id;
+                    return (
+                      <button
+                        key={sec.id}
+                        onClick={() => setCurrentTab && setCurrentTab(sec.id)}
+                        className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                          isActive
+                            ? "bg-[#0056b3] text-white shadow-xs font-bold"
+                            : "text-slate-700 hover:text-slate-900 hover:bg-slate-100 font-medium"
+                        }`}
+                      >
+                        <span className="text-xs truncate">{sec.label}</span>
+                        {isActive && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#ff6b00] shrink-0" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* 11. CONTACT US PAGE WITH DROPDOWN (4 SECTIONS) */}
+            <div className="rounded-2xl border border-slate-200 bg-slate-50/60 overflow-hidden shadow-xs">
+              <button
+                onClick={() => setContactDropdownOpen(!contactDropdownOpen)}
+                className="w-full flex items-center justify-between px-4 py-3 text-left transition-colors cursor-pointer bg-white hover:bg-slate-50 border-b border-slate-200"
+              >
+                <span className="text-xs font-bold text-slate-900 tracking-wide">
+                  Contact Us Page
+                </span>
+
+                <div className="text-slate-400">
+                  {contactDropdownOpen ? (
+                    <ChevronDown className="w-4 h-4 text-[#ff6b00]" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  )}
+                </div>
+              </button>
+
+              {/* SECTIONS LIST INSIDE DROPDOWN */}
+              {contactDropdownOpen && (
+                <div className="p-1.5 space-y-1 bg-white">
+                  {contactSections.map((sec) => {
                     const isActive = currentTab === sec.id;
                     return (
                       <button
