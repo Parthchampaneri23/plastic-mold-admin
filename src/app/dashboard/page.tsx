@@ -79,6 +79,19 @@ import {
   IndustryListEditor,
 } from "@/components/industries";
 
+// Quality & Testing Page Editors
+import {
+  QualityHeroOverviewEditor,
+  QualityPolicyEditor,
+  QualityProcessEditor,
+  RawMaterialEditor,
+  InProcessEditor,
+  FinalInspectionEditor,
+  MoldTestingEditor,
+  MeasurementEquipmentEditor,
+  QualityStandardsEditor,
+} from "@/components/quality";
+
 export default function DashboardPage() {
   const [currentTab, setCurrentTab] = useState("hero");
   const [loading, setLoading] = useState(true);
@@ -90,9 +103,13 @@ export default function DashboardPage() {
   const [manufacturingData, setManufacturingData] = useState<any>(null);
   const [infrastructureData, setInfrastructureData] = useState<any>(null);
   const [industriesData, setIndustriesData] = useState<any>(null);
+  const [qualityData, setQualityData] = useState<any>(null);
   const [selectedProductId, setSelectedProductId] = useState<string>("");
   const [selectedIndustryId, setSelectedIndustryId] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
+
+  // Main content container ref to scroll to top on tab switch
+  const mainContentRef = React.useRef<HTMLElement | null>(null);
 
   // Restore currentTab from URL hash or localStorage on initial client mount
   useEffect(() => {
@@ -109,14 +126,28 @@ export default function DashboardPage() {
     }
   }, []);
 
-  // Update hash and localStorage whenever currentTab changes
+  // Update hash and localStorage whenever currentTab changes + scroll top
   const handleTabChange = (tab: string) => {
     setCurrentTab(tab);
     if (typeof window !== "undefined") {
       window.location.hash = tab;
       localStorage.setItem("admin_current_tab", tab);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+    if (mainContentRef.current) {
+      mainContentRef.current.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
+
+  // Also scroll when currentTab changes directly
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+    if (mainContentRef.current) {
+      mainContentRef.current.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [currentTab]);
 
   const loadData = async () => {
     try {
@@ -197,6 +228,17 @@ export default function DashboardPage() {
       } catch (e) {
         console.warn("Industries data fetch error:", e);
       }
+
+      // Load Quality & Testing Page Data
+      try {
+        const qualityRes = await fetch("/api/quality");
+        const qualityJson = await qualityRes.json();
+        if (qualityJson.success && qualityJson.data) {
+          setQualityData(qualityJson.data);
+        }
+      } catch (e) {
+        console.warn("Quality data fetch error:", e);
+      }
     } catch (err: any) {
       setError(err?.message || "Failed to load content");
     } finally {
@@ -218,8 +260,24 @@ export default function DashboardPage() {
       const isMfgSection = currentTab.startsWith("mfg-");
       const isInfraSection = currentTab.startsWith("infra-");
       const isIndustrySection = currentTab.startsWith("industry-");
+      const isQualitySection = currentTab.startsWith("quality-");
 
-      if (isIndustrySection) {
+      if (isQualitySection) {
+        // Save Quality Page Content
+        const res = await fetch("/api/quality", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(qualityData),
+        });
+        const resJson = await res.json();
+        if (resJson.success) {
+          setQualityData(resJson.data);
+          setSavedToast(true);
+          setTimeout(() => setSavedToast(false), 3000);
+        } else {
+          setError(resJson.error || "Failed to save Quality page content.");
+        }
+      } else if (isIndustrySection) {
         // Save Industries Page Content
         const res = await fetch("/api/industries", {
           method: "PUT",
@@ -424,6 +482,26 @@ export default function DashboardPage() {
       case "industry-list":
         return "Industries / 2. Industry Sectors (8)";
 
+      // Quality & Testing Page Sections
+      case "quality-hero":
+        return "Quality & Testing / 1. Banner & Overview";
+      case "quality-policy":
+        return "Quality & Testing / 2. Quality Policy";
+      case "quality-process":
+        return "Quality & Testing / 3. 5-Stage QC Process";
+      case "quality-raw-material":
+        return "Quality & Testing / 4. Raw Material Verification";
+      case "quality-in-process":
+        return "Quality & Testing / 5. In-Process Dashboard";
+      case "quality-final":
+        return "Quality & Testing / 6. Pre-Dispatch Checklist";
+      case "quality-testing":
+        return "Quality & Testing / 7. Mould Testing Journey";
+      case "quality-equipment":
+        return "Quality & Testing / 8. Measurement Instruments";
+      case "quality-standards":
+        return "Quality & Testing / 9. Standards & Certifications";
+
       default:
         return "Dashboard Overview";
     }
@@ -456,7 +534,7 @@ export default function DashboardPage() {
           onSelectTab={handleTabChange}
         />
 
-        <main className="flex-1 p-6 md:p-8 overflow-y-auto max-w-7xl mx-auto w-full">
+        <main ref={mainContentRef} className="flex-1 p-6 md:p-8 overflow-y-auto max-w-7xl mx-auto w-full">
           {error && (
             <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm flex items-center gap-3">
               <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
@@ -795,6 +873,100 @@ export default function DashboardPage() {
               }
               selectedIndustryId={selectedIndustryId}
               onSelectIndustry={(id) => setSelectedIndustryId(id)}
+            />
+          )}
+
+          {/* QUALITY: SECTION 1 - HERO BANNER & OVERVIEW */}
+          {currentTab === "quality-hero" && qualityData && (
+            <QualityHeroOverviewEditor
+              heroBanner={qualityData.heroBanner}
+              overview={qualityData.overview}
+              onHeroChange={(heroBanner) =>
+                setQualityData({ ...qualityData, heroBanner })
+              }
+              onOverviewChange={(overview) =>
+                setQualityData({ ...qualityData, overview })
+              }
+            />
+          )}
+
+          {/* QUALITY: SECTION 2 - POLICY & COMMITMENTS */}
+          {currentTab === "quality-policy" && qualityData && (
+            <QualityPolicyEditor
+              policy={qualityData.policy}
+              onChange={(policy) =>
+                setQualityData({ ...qualityData, policy })
+              }
+            />
+          )}
+
+          {/* QUALITY: SECTION 3 - PROCESS TIMELINE */}
+          {currentTab === "quality-process" && qualityData && (
+            <QualityProcessEditor
+              process={qualityData.process}
+              onChange={(process) =>
+                setQualityData({ ...qualityData, process })
+              }
+            />
+          )}
+
+          {/* QUALITY: SECTION 4 - RAW MATERIAL INSPECTION */}
+          {currentTab === "quality-raw-material" && qualityData && (
+            <RawMaterialEditor
+              rawMaterial={qualityData.rawMaterial}
+              onChange={(rawMaterial) =>
+                setQualityData({ ...qualityData, rawMaterial })
+              }
+            />
+          )}
+
+          {/* QUALITY: SECTION 5 - IN-PROCESS DASHBOARD */}
+          {currentTab === "quality-in-process" && qualityData && (
+            <InProcessEditor
+              inProcess={qualityData.inProcess}
+              onChange={(inProcess) =>
+                setQualityData({ ...qualityData, inProcess })
+              }
+            />
+          )}
+
+          {/* QUALITY: SECTION 6 - FINAL PRE-DISPATCH CHECKLIST */}
+          {currentTab === "quality-final" && qualityData && (
+            <FinalInspectionEditor
+              finalInspection={qualityData.finalInspection}
+              onChange={(finalInspection) =>
+                setQualityData({ ...qualityData, finalInspection })
+              }
+            />
+          )}
+
+          {/* QUALITY: SECTION 7 - MOULD TESTING JOURNEY */}
+          {currentTab === "quality-testing" && qualityData && (
+            <MoldTestingEditor
+              moldTesting={qualityData.moldTesting}
+              onChange={(moldTesting) =>
+                setQualityData({ ...qualityData, moldTesting })
+              }
+            />
+          )}
+
+          {/* QUALITY: SECTION 8 - MEASUREMENT INSTRUMENTS */}
+          {currentTab === "quality-equipment" && qualityData && (
+            <MeasurementEquipmentEditor
+              measurementEquipment={qualityData.measurementEquipment}
+              onChange={(measurementEquipment) =>
+                setQualityData({ ...qualityData, measurementEquipment })
+              }
+            />
+          )}
+
+          {/* QUALITY: SECTION 9 - QUALITY STANDARDS & CERTIFICATIONS */}
+          {currentTab === "quality-standards" && qualityData && (
+            <QualityStandardsEditor
+              standards={qualityData.standards}
+              onChange={(standards) =>
+                setQualityData({ ...qualityData, standards })
+              }
             />
           )}
 
