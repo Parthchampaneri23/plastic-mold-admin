@@ -99,6 +99,13 @@ import {
   GalleryItemsEditor,
 } from "@/components/gallery";
 
+// Blogs Page Editors
+import {
+  BlogHeroIntroEditor,
+  BlogCategoriesEditor,
+  BlogPostsEditor,
+} from "@/components/blogs";
+
 export default function DashboardPage() {
   const [currentTab, setCurrentTab] = useState("hero");
   const [loading, setLoading] = useState(true);
@@ -112,9 +119,11 @@ export default function DashboardPage() {
   const [industriesData, setIndustriesData] = useState<any>(null);
   const [qualityData, setQualityData] = useState<any>(null);
   const [galleryData, setGalleryData] = useState<any>(null);
+  const [blogsData, setBlogsData] = useState<any>(null);
   const [selectedProductId, setSelectedProductId] = useState<string>("");
   const [selectedIndustryId, setSelectedIndustryId] = useState<string>("");
   const [selectedGalleryItemId, setSelectedGalleryItemId] = useState<string>("");
+  const [selectedBlogPostId, setSelectedBlogPostId] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
 
   // Main content container ref to scroll to top on tab switch
@@ -262,6 +271,20 @@ export default function DashboardPage() {
       } catch (e) {
         console.warn("Gallery data fetch error:", e);
       }
+
+      // Load Blogs Page Data
+      try {
+        const blogsRes = await fetch("/api/blogs");
+        const blogsJson = await blogsRes.json();
+        if (blogsJson.success && blogsJson.data) {
+          setBlogsData(blogsJson.data);
+          if (blogsJson.data.posts?.length > 0 && !selectedBlogPostId) {
+            setSelectedBlogPostId(blogsJson.data.posts[0].id);
+          }
+        }
+      } catch (e) {
+        console.warn("Blogs data fetch error:", e);
+      }
     } catch (err: any) {
       setError(err?.message || "Failed to load content");
     } finally {
@@ -285,6 +308,7 @@ export default function DashboardPage() {
       const isIndustrySection = currentTab.startsWith("industry-");
       const isQualitySection = currentTab.startsWith("quality-");
       const isGallerySection = currentTab.startsWith("gallery-");
+      const isBlogsSection = currentTab.startsWith("blogs-");
 
       if (isQualitySection) {
         // Save Quality Page Content
@@ -300,6 +324,21 @@ export default function DashboardPage() {
           setTimeout(() => setSavedToast(false), 3000);
         } else {
           setError(resJson.error || "Failed to save Quality page content.");
+        }
+      } else if (isBlogsSection) {
+        // Save Blogs Page Content
+        const res = await fetch("/api/blogs", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(blogsData),
+        });
+        const resJson = await res.json();
+        if (resJson.success) {
+          setBlogsData(resJson.data);
+          setSavedToast(true);
+          setTimeout(() => setSavedToast(false), 3000);
+        } else {
+          setError(resJson.error || "Failed to save Blogs page content.");
         }
       } else if (isGallerySection) {
         // Save Gallery Page Content
@@ -548,6 +587,14 @@ export default function DashboardPage() {
         return "Gallery / 2. Featured Collections (3 Cards)";
       case "gallery-items":
         return "Gallery / 3. Gallery Items & Media Library";
+
+      // Blogs Page Sections
+      case "blogs-hero":
+        return "Blogs / 1. Banner & Knowledge Hub Intro";
+      case "blogs-categories":
+        return "Blogs / 2. Filter Categories Pills";
+      case "blogs-posts":
+        return "Blogs / 3. Blog Articles & Technical Editor";
 
       default:
         return "Dashboard Overview";
@@ -1054,6 +1101,47 @@ export default function DashboardPage() {
               }
               selectedItemId={selectedGalleryItemId}
               onSelectItem={(id) => setSelectedGalleryItemId(id)}
+            />
+          )}
+
+          {/* ======================================================== */}
+          {/* BLOGS PAGE EDITORS (3 SECTIONS)                          */}
+          {/* ======================================================== */}
+
+          {/* BLOGS: SECTION 1 - HERO BANNER & INTRO */}
+          {currentTab === "blogs-hero" && blogsData && (
+            <BlogHeroIntroEditor
+              heroBanner={blogsData.heroBanner}
+              intro={blogsData.intro}
+              onHeroChange={(heroBanner) =>
+                setBlogsData({ ...blogsData, heroBanner })
+              }
+              onIntroChange={(intro) =>
+                setBlogsData({ ...blogsData, intro })
+              }
+            />
+          )}
+
+          {/* BLOGS: SECTION 2 - CATEGORY FILTER PILLS */}
+          {currentTab === "blogs-categories" && blogsData && (
+            <BlogCategoriesEditor
+              categories={blogsData.categories}
+              onChange={(categories) =>
+                setBlogsData({ ...blogsData, categories })
+              }
+            />
+          )}
+
+          {/* BLOGS: SECTION 3 - BLOG ARTICLES & POSTS */}
+          {currentTab === "blogs-posts" && blogsData && (
+            <BlogPostsEditor
+              posts={blogsData.posts}
+              categories={blogsData.categories}
+              onChange={(posts) =>
+                setBlogsData({ ...blogsData, posts })
+              }
+              selectedPostId={selectedBlogPostId}
+              onSelectPost={(id) => setSelectedBlogPostId(id)}
             />
           )}
 
