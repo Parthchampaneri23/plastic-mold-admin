@@ -118,8 +118,11 @@ import {
 // Legal Page Editor (Privacy Policy & Terms)
 import { LegalPageEditor } from "@/components/legal/LegalPageEditor";
 
+// Dashboard Overview Hub Component
+import { DashboardOverview } from "@/components/dashboard/DashboardOverview";
+
 export default function DashboardPage() {
-  const [currentTab, setCurrentTab] = useState("hero");
+  const [currentTab, setCurrentTab] = useState("overview");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savedToast, setSavedToast] = useState(false);
@@ -1331,14 +1334,21 @@ export default function DashboardPage() {
 
           {/* OVERVIEW TAB */}
           {currentTab === "overview" && (
-            <div className="space-y-6">
-              <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm">
-                <h1 className="text-2xl font-black text-slate-900">Patel Mould Control Dashboard</h1>
-                <p className="text-xs text-slate-500 mt-1">
-                  Select <strong className="text-[#ff6b00]">Home Page</strong>, <strong className="text-[#0056b3]">About Page</strong>, or <strong className="text-[#ff6b00]">Product Page</strong> on the sidebar to manage all dynamic content, categories, products, and SEO.
-                </p>
-              </div>
-            </div>
+            <DashboardOverview
+              data={data}
+              aboutData={aboutData}
+              productsData={productsData}
+              manufacturingData={manufacturingData}
+              infrastructureData={infrastructureData}
+              industriesData={industriesData}
+              qualityData={qualityData}
+              galleryData={galleryData}
+              blogsData={blogsData}
+              contactData={contactData}
+              privacyPolicyData={privacyPolicyData}
+              termsData={termsData}
+              onNavigateTab={handleTabChange}
+            />
           )}
         </main>
       </div>

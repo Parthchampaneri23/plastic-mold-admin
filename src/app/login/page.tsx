@@ -36,8 +36,11 @@ export default function LoginPage() {
         throw new Error(data.message || "Login failed. Please check credentials.");
       }
 
-      // Successful login -> Redirect to dashboard
-      router.push("/dashboard");
+      // Successful login -> Redirect to dashboard overview
+      if (typeof window !== "undefined") {
+        localStorage.setItem("admin_current_tab", "overview");
+      }
+      router.push("/dashboard#overview");
       router.refresh();
     } catch (err: any) {
       setError(err.message || "Failed to sign in. Please verify your connection.");

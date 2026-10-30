@@ -31,21 +31,32 @@ export function Navbar({ onSave, saving, savedToast, onRefresh, currentSectionTi
             Patel Mould Admin
           </button>
 
-          <span className="text-slate-300">/</span>
-
-          <button
-            type="button"
-            onClick={() => onSelectTab && onSelectTab("hero")}
-            className="text-[#0056b3] hover:text-[#003d80] font-bold flex items-center gap-1.5 transition-colors cursor-pointer group"
-          >
-            <Home className="w-3.5 h-3.5 text-[#ff6b00] group-hover:scale-110 transition-transform" />
-            <span>Home Page</span>
-          </button>
-
-          {currentSectionTitle && (
+          {currentSectionTitle === "Dashboard Overview" ? (
             <>
               <span className="text-slate-300">/</span>
-              <span className="text-slate-900 font-extrabold">{currentSectionTitle}</span>
+              <span className="text-slate-900 font-extrabold flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-[#ff6b00]" />
+                Dashboard Overview
+              </span>
+            </>
+          ) : (
+            <>
+              <span className="text-slate-300">/</span>
+              <button
+                type="button"
+                onClick={() => onSelectTab && onSelectTab("hero")}
+                className="text-[#0056b3] hover:text-[#003d80] font-bold flex items-center gap-1.5 transition-colors cursor-pointer group"
+              >
+                <Home className="w-3.5 h-3.5 text-[#ff6b00] group-hover:scale-110 transition-transform" />
+                <span>Home Page</span>
+              </button>
+
+              {currentSectionTitle && (
+                <>
+                  <span className="text-slate-300">/</span>
+                  <span className="text-slate-900 font-extrabold">{currentSectionTitle}</span>
+                </>
+              )}
             </>
           )}
         </div>
