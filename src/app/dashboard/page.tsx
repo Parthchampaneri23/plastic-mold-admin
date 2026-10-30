@@ -114,6 +114,9 @@ import {
   ContactDirectEditor,
 } from "@/components/contact";
 
+// Legal Page Editor (Privacy Policy & Terms)
+import { LegalPageEditor } from "@/components/legal/LegalPageEditor";
+
 export default function DashboardPage() {
   const [currentTab, setCurrentTab] = useState("hero");
   const [loading, setLoading] = useState(true);
@@ -129,6 +132,8 @@ export default function DashboardPage() {
   const [galleryData, setGalleryData] = useState<any>(null);
   const [blogsData, setBlogsData] = useState<any>(null);
   const [contactData, setContactData] = useState<any>(null);
+  const [privacyPolicyData, setPrivacyPolicyData] = useState<any>(null);
+  const [termsData, setTermsData] = useState<any>(null);
   const [selectedProductId, setSelectedProductId] = useState<string>("");
   const [selectedIndustryId, setSelectedIndustryId] = useState<string>("");
   const [selectedGalleryItemId, setSelectedGalleryItemId] = useState<string>("");
@@ -305,6 +310,22 @@ export default function DashboardPage() {
       } catch (e) {
         console.warn("Contact data fetch error:", e);
       }
+
+      // Load Legal Pages Data (Privacy Policy & Terms)
+      try {
+        const legalRes = await fetch("/api/legal");
+        const legalJson = await legalRes.json();
+        if (legalJson.success && legalJson.data) {
+          if (legalJson.data.privacyPolicy) {
+            setPrivacyPolicyData(legalJson.data.privacyPolicy);
+          }
+          if (legalJson.data.termsAndConditions) {
+            setTermsData(legalJson.data.termsAndConditions);
+          }
+        }
+      } catch (e) {
+        console.warn("Legal data fetch error:", e);
+      }
     } catch (err: any) {
       setError(err?.message || "Failed to load content");
     } finally {
@@ -330,8 +351,45 @@ export default function DashboardPage() {
       const isGallerySection = currentTab.startsWith("gallery-");
       const isBlogsSection = currentTab.startsWith("blogs-");
       const isContactSection = currentTab.startsWith("contact-");
+      const isLegalSection = currentTab.startsWith("legal-");
 
-      if (isQualitySection) {
+      if (currentTab === "legal-privacy") {
+        // Save Privacy Policy
+        const res = await fetch("/api/legal", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            pageType: "privacy-policy",
+            ...privacyPolicyData,
+          }),
+        });
+        const resJson = await res.json();
+        if (resJson.success) {
+          setPrivacyPolicyData(resJson.data);
+          setSavedToast(true);
+          setTimeout(() => setSavedToast(false), 3000);
+        } else {
+          setError(resJson.error || "Failed to save Privacy Policy content.");
+        }
+      } else if (currentTab === "legal-terms") {
+        // Save Terms & Conditions
+        const res = await fetch("/api/legal", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            pageType: "terms-and-conditions",
+            ...termsData,
+          }),
+        });
+        const resJson = await res.json();
+        if (resJson.success) {
+          setTermsData(resJson.data);
+          setSavedToast(true);
+          setTimeout(() => setSavedToast(false), 3000);
+        } else {
+          setError(resJson.error || "Failed to save Terms & Conditions content.");
+        }
+      } else if (isQualitySection) {
         // Save Quality Page Content
         const res = await fetch("/api/quality", {
           method: "PUT",
@@ -641,6 +699,12 @@ export default function DashboardPage() {
         return "Contact Us / 3. Request a Quote Form & Header";
       case "contact-direct":
         return "Contact Us / 4. Direct Contact Form & Google Map";
+
+      // Legal Pages Sections
+      case "legal-privacy":
+        return "Legal Pages / 1. Privacy Policy & NDA Terms";
+      case "legal-terms":
+        return "Legal Pages / 2. Terms & Conditions (Commercial & Engineering)";
 
       default:
         return "Dashboard Overview";
@@ -1232,6 +1296,30 @@ export default function DashboardPage() {
               onChange={(direct) =>
                 setContactData({ ...contactData, direct })
               }
+            />
+          )}
+
+          {/* ======================================================== */}
+          {/* LEGAL PAGES EDITORS (PRIVACY POLICY & TERMS)            */}
+          {/* ======================================================== */}
+
+          {/* LEGAL: PRIVACY POLICY */}
+          {currentTab === "legal-privacy" && privacyPolicyData && (
+            <LegalPageEditor
+              pageType="privacy-policy"
+              pageTitle="Privacy Policy"
+              data={privacyPolicyData}
+              onChange={(updated) => setPrivacyPolicyData(updated)}
+            />
+          )}
+
+          {/* LEGAL: TERMS & CONDITIONS */}
+          {currentTab === "legal-terms" && termsData && (
+            <LegalPageEditor
+              pageType="terms-and-conditions"
+              pageTitle="Terms & Conditions"
+              data={termsData}
+              onChange={(updated) => setTermsData(updated)}
             />
           )}
 
