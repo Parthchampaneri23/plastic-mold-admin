@@ -106,9 +106,8 @@ export function ImagePicker({
           <div
             onClick={() => hasValidImage && setIsModalOpen(true)}
             title={hasValidImage ? "Click to preview full image" : ""}
-            className={`w-16 h-16 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-center overflow-hidden shrink-0 relative group shadow-xs transition-all ${
-              hasValidImage ? "cursor-pointer hover:border-[#0056b3] hover:shadow-md ring-1 ring-transparent hover:ring-[#0056b3]/30" : ""
-            }`}
+            className={`w-16 h-16 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-center overflow-hidden shrink-0 relative group shadow-xs transition-all ${hasValidImage ? "cursor-pointer hover:border-[#0056b3] hover:shadow-md ring-1 ring-transparent hover:ring-[#0056b3]/30" : ""
+              }`}
           >
             {hasValidImage ? (
               <>
@@ -193,7 +192,7 @@ export function ImagePicker({
             <div>
               <label className="block text-[11px] font-semibold text-slate-600 mb-1 flex items-center gap-1">
                 <span>Image Name</span>
-                <span className="text-[10px] text-slate-400 font-normal">(Internal label/File ref)</span>
+                <span className="text-[10px] text-slate-400 font-normal"></span>
               </label>
               <input
                 type="text"
@@ -211,7 +210,7 @@ export function ImagePicker({
             <div>
               <label className="block text-[11px] font-semibold text-slate-600 mb-1 flex items-center gap-1">
                 <span>Image Alt</span>
-                <span className="text-[10px] text-[#ff6b00] font-semibold tracking-wide">(SEO & Accessibility)</span>
+                <span className="text-[10px] text-[#ff6b00] font-semibold tracking-wide"></span>
               </label>
               <input
                 type="text"

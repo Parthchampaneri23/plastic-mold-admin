@@ -67,19 +67,10 @@ export default function FooterEditor({ data, setData }: FooterEditorProps) {
       {/* Header Info Box */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-2xl bg-white border border-slate-200 shadow-sm">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded text-[10px] font-bold bg-[#0056b3]/10 text-[#0056b3] border border-[#0056b3]/20 uppercase">
-              Site Manager &bull; Global Footer
-            </span>
-            <span className="text-xs text-slate-500 font-medium">Dark Navy Footer on All Pages</span>
-          </div>
           <h2 className="text-xl font-extrabold text-slate-900 mt-1 flex items-center gap-2">
             <PanelBottom className="w-5 h-5 text-[#ff6b00]" />
             Global Website Footer
           </h2>
-          <p className="text-xs text-slate-500 mt-1">
-            Manage the brand logo, company summary, social media URLs, quick links, contact info, and copyright bar.
-          </p>
         </div>
       </div>
 
@@ -99,7 +90,6 @@ export default function FooterEditor({ data, setData }: FooterEditorProps) {
               label="Footer Logo (White / Clean PNG)"
               value={footer.logoImage || "/PMlogo.png"}
               onChange={(url) => updateFooter("logoImage", url)}
-              helperText="High-contrast logo displayed against dark navy background"
             />
           </div>
 

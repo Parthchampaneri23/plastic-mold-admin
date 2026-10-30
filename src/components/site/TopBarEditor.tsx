@@ -31,19 +31,10 @@ export default function TopBarEditor({ data, setData }: TopBarEditorProps) {
       {/* Header Info Box */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-2xl bg-white border border-slate-200 shadow-sm">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded text-[10px] font-bold bg-[#0056b3]/10 text-[#0056b3] border border-[#0056b3]/20 uppercase">
-              Site Manager &bull; Top Bar
-            </span>
-            <span className="text-xs text-slate-500 font-medium">Global Website Header Utility Bar</span>
-          </div>
           <h2 className="text-xl font-extrabold text-slate-900 mt-1 flex items-center gap-2">
             <Phone className="w-5 h-5 text-[#ff6b00]" />
             Top Bar (Contact & Location Bar)
           </h2>
-          <p className="text-xs text-slate-500 mt-1">
-            Manage the phone number, sales email, and company location displayed on the dark navy utility bar at the very top of all website pages.
-          </p>
         </div>
       </div>
 

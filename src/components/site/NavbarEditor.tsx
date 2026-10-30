@@ -40,19 +40,10 @@ export default function NavbarEditor({ data, setData }: NavbarEditorProps) {
       {/* Header Info Box */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-2xl bg-white border border-slate-200 shadow-sm">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded text-[10px] font-bold bg-[#0056b3]/10 text-[#0056b3] border border-[#0056b3]/20 uppercase">
-              Site Manager &bull; Main Navbar
-            </span>
-            <span className="text-xs text-slate-500 font-medium">Header Brand Logo, Links & Request a Quote CTA</span>
-          </div>
           <h2 className="text-xl font-extrabold text-slate-900 mt-1 flex items-center gap-2">
             <Navigation className="w-5 h-5 text-[#ff6b00]" />
             Main Website Navbar
           </h2>
-          <p className="text-xs text-slate-500 mt-1">
-            Manage the brand logo, primary navigation links (About Us, Products, Manufacturing, Infrastructure, Industries, Blogs, Contact), and the &ldquo;Request a Quote&rdquo; button.
-          </p>
         </div>
 
         <button
@@ -90,7 +81,6 @@ export default function NavbarEditor({ data, setData }: NavbarEditorProps) {
               label="Website Header Brand Logo (Left Side)"
               value={navbar.logoImage || "/PMlogo.png"}
               onChange={(url) => updateNavbar("logoImage", url)}
-              helperText="Official website logo (e.g. /PMlogo.png)"
             />
           </div>
 
@@ -108,7 +98,6 @@ export default function NavbarEditor({ data, setData }: NavbarEditorProps) {
                   },
                 });
               }}
-              helperText="Favicon displayed in the browser tab (e.g. /favicon.ico)"
             />
           </div>
 
@@ -147,7 +136,24 @@ export default function NavbarEditor({ data, setData }: NavbarEditorProps) {
             <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
               Navigation Menu Items ({navbar.links?.length || 0})
             </h4>
-            <span className="text-[11px] text-slate-500 font-medium">Top bar menu order</span>
+
+            <button
+              type="button"
+              onClick={() => {
+                const count = (navbar.links?.length || 0) + 1;
+                const newLink = {
+                  id: `nav-${Date.now()}`,
+                  label: `Link ${count}`,
+                  href: "/",
+                  hasDropdown: false,
+                };
+                updateNavbar("links", [...(navbar.links || []), newLink]);
+              }}
+              className="px-3.5 py-1.5 rounded-xl bg-[#0056b3] hover:bg-[#003d80] text-white text-xs font-bold flex items-center gap-1.5 shadow-sm shadow-[#0056b3]/20 transition-all cursor-pointer shrink-0"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Add Nav Item</span>
+            </button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

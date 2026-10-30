@@ -27,9 +27,6 @@ export default function HeroSectionEditor({ data, setData }: HeroSectionEditorPr
             <Sliders className="w-5 h-5 text-[#ff6b00]" />
             Hero Sliders & Banners
           </h2>
-          <p className="text-xs text-slate-500 mt-1">
-            Manage the 4 home page background slider banners, titles, highlighted texts, badges, and action buttons.
-          </p>
         </div>
 
         {/* ADD MORE SLIDER BUTTON */}
