@@ -85,12 +85,30 @@ export default function NavbarEditor({ data, setData }: NavbarEditorProps) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Logo Picker */}
-          <div className="md:col-span-2">
+          <div>
             <ImagePicker
               label="Website Header Brand Logo (Left Side)"
               value={navbar.logoImage || "/PMlogo.png"}
               onChange={(url) => updateNavbar("logoImage", url)}
               helperText="Official website logo (e.g. /PMlogo.png)"
+            />
+          </div>
+
+          {/* Favicon / Icon Picker */}
+          <div>
+            <ImagePicker
+              label="Browser Tab Favicon / Icon"
+              value={data?.brandIdentity?.faviconUrl || "/favicon.ico"}
+              onChange={(url) => {
+                setData({
+                  ...data,
+                  brandIdentity: {
+                    ...(data?.brandIdentity || {}),
+                    faviconUrl: url,
+                  },
+                });
+              }}
+              helperText="Favicon displayed in the browser tab (e.g. /favicon.ico)"
             />
           </div>
 

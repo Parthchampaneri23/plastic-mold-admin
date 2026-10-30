@@ -19,11 +19,12 @@ import {
   InquiryCtaEditor,
 } from "@/components/home";
 
-// Site Manager Editors (Top bar, Navbar, Footer)
+// Site Manager Editors (Top bar, Navbar, Footer, Brand Identity)
 import {
   TopBarEditor,
   NavbarEditor,
   FooterEditor,
+  BrandIdentityEditor,
 } from "@/components/site";
 
 // About Us Page Editors
@@ -550,6 +551,8 @@ export default function DashboardPage() {
   const getSectionTitle = () => {
     switch (currentTab) {
       // Site Manager
+      case "site-brand":
+        return "Site Manager / Brand Identity (Logo & Favicon)";
       case "site-topbar":
         return "Site Manager / Top Bar (Contacts & Location)";
       case "site-navbar":
@@ -745,6 +748,9 @@ export default function DashboardPage() {
               <span>{error}</span>
             </div>
           )}
+
+          {/* SITE MANAGER: BRAND ASSETS (LOGO & FAVICON) */}
+          {currentTab === "site-brand" && <BrandIdentityEditor data={data} setData={setData} />}
 
           {/* SITE MANAGER: TOP BAR */}
           {currentTab === "site-topbar" && <TopBarEditor data={data} setData={setData} />}

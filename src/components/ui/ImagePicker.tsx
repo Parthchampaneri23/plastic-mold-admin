@@ -2,6 +2,7 @@
 
 import React, { useState, useRef } from "react";
 import { Upload, Image as ImageIcon, Loader2, Eye, X, ExternalLink } from "lucide-react";
+import { getImageMetadata } from "@/data/defaultImageMetadata";
 
 interface ImagePickerProps {
   label: string;
@@ -9,13 +10,55 @@ interface ImagePickerProps {
   onChange: (url: string) => void;
   helperText?: string;
   description?: string;
+  imageName?: string;
+  onImageNameChange?: (name: string) => void;
+  imageAlt?: string;
+  onImageAltChange?: (alt: string) => void;
+  showSeoFields?: boolean;
 }
 
-export function ImagePicker({ label, value, onChange, helperText, description }: ImagePickerProps) {
+export function ImagePicker({
+  label,
+  value,
+  onChange,
+  helperText,
+  description,
+  imageName,
+  onImageNameChange,
+  imageAlt,
+  onImageAltChange,
+  showSeoFields = true,
+}: ImagePickerProps) {
   const [uploading, setUploading] = useState(false);
   const [previewError, setPreviewError] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Compute default prefill from central registry based on current image path and label
+  const defaultMeta = React.useMemo(() => {
+    return getImageMetadata(value, label);
+  }, [value, label]);
+
+  // Internal state: initialized with prop if provided, else default metadata
+  const [internalName, setInternalName] = useState(imageName ?? defaultMeta.name);
+  const [internalAlt, setInternalAlt] = useState(imageAlt ?? defaultMeta.alt);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Keep internal states in sync if props or current image change
+  React.useEffect(() => {
+    if (imageName !== undefined && imageName !== "") {
+      setInternalName(imageName);
+    } else {
+      setInternalName(defaultMeta.name);
+    }
+  }, [imageName, defaultMeta.name]);
+
+  React.useEffect(() => {
+    if (imageAlt !== undefined && imageAlt !== "") {
+      setInternalAlt(imageAlt);
+    } else {
+      setInternalAlt(defaultMeta.alt);
+    }
+  }, [imageAlt, defaultMeta.alt]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -143,6 +186,47 @@ export function ImagePicker({ label, value, onChange, helperText, description }:
             </button>
           </div>
         </div>
+
+        {/* Image Name & Image Alt (SEO) Fields */}
+        {showSeoFields && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1.5 pl-0 sm:pl-[76px]">
+            <div>
+              <label className="block text-[11px] font-semibold text-slate-600 mb-1 flex items-center gap-1">
+                <span>Image Name</span>
+                <span className="text-[10px] text-slate-400 font-normal">(Internal label/File ref)</span>
+              </label>
+              <input
+                type="text"
+                value={imageName !== undefined ? imageName : internalName}
+                onChange={(e) => {
+                  const newVal = e.target.value;
+                  setInternalName(newVal);
+                  if (onImageNameChange) onImageNameChange(newVal);
+                }}
+                placeholder="e.g. Hero Banner 1 / Injection Mold"
+                className="w-full px-3 py-2 bg-slate-50/70 hover:bg-white focus:bg-white border border-slate-200 rounded-lg text-slate-800 text-xs font-medium focus:outline-none focus:border-[#0056b3] focus:ring-1 focus:ring-[#0056b3] placeholder:text-slate-400 transition-colors shadow-xs"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-semibold text-slate-600 mb-1 flex items-center gap-1">
+                <span>Image Alt</span>
+                <span className="text-[10px] text-[#ff6b00] font-semibold tracking-wide">(SEO & Accessibility)</span>
+              </label>
+              <input
+                type="text"
+                value={imageAlt !== undefined ? imageAlt : internalAlt}
+                onChange={(e) => {
+                  const newVal = e.target.value;
+                  setInternalAlt(newVal);
+                  if (onImageAltChange) onImageAltChange(newVal);
+                }}
+                placeholder="e.g. High precision multi-cavity preform mold"
+                className="w-full px-3 py-2 bg-slate-50/70 hover:bg-white focus:bg-white border border-slate-200 rounded-lg text-slate-800 text-xs font-medium focus:outline-none focus:border-[#0056b3] focus:ring-1 focus:ring-[#0056b3] placeholder:text-slate-400 transition-colors shadow-xs"
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* FULL-SCREEN LIGHTBOX MODAL PREVIEW */}

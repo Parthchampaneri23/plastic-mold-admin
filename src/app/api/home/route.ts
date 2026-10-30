@@ -57,6 +57,7 @@ export async function PUT(req: NextRequest) {
       if (body.inquiryCta !== undefined) content.inquiryCta = body.inquiryCta;
       if (body.topBar !== undefined) content.topBar = body.topBar;
       if (body.navbar !== undefined) content.navbar = body.navbar;
+      if (body.brandIdentity !== undefined) content.brandIdentity = body.brandIdentity;
       if (body.footer !== undefined) content.footer = body.footer;
     }
 

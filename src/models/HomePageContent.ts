@@ -244,6 +244,15 @@ export interface IHomePageContent extends Document {
     ctaButtonLink: string;
     menuLinks: { label: string; href: string; isMegaMenu?: boolean }[];
   };
+  brandIdentity?: {
+    logoImage: string;
+    logoAlt: string;
+    footerLogoImage?: string;
+    faviconUrl: string;
+    appleTouchIconUrl?: string;
+    siteTitle?: string;
+    siteTagline?: string;
+  };
   footer?: {
     logoImage: string;
     companyBio: string;
@@ -282,6 +291,7 @@ const HomePageContentSchema = new Schema<IHomePageContent>(
     indianTestimonials: [{ type: Schema.Types.Mixed }],
     topBar: { type: Schema.Types.Mixed },
     navbar: { type: Schema.Types.Mixed },
+    brandIdentity: { type: Schema.Types.Mixed },
     footer: { type: Schema.Types.Mixed },
     companyIntro: {
       badge: { type: String, default: "PRECISION TOOLING LEADERSHIP" },

@@ -257,6 +257,17 @@ export function Sidebar({ currentTab = "overview", setCurrentTab }: SidebarProps
               {siteDropdownOpen && (
                 <div className="p-1.5 space-y-1 bg-white">
                   <button
+                    onClick={() => setCurrentTab && setCurrentTab("site-brand")}
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                      currentTab === "site-brand"
+                        ? "bg-[#0056b3] text-white shadow-xs font-bold"
+                        : "text-slate-700 hover:text-slate-900 hover:bg-slate-100 font-medium"
+                    }`}
+                  >
+                    <span className="text-xs truncate">Logo & Favicon Manager</span>
+                  </button>
+
+                  <button
                     onClick={() => setCurrentTab && setCurrentTab("site-topbar")}
                     className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left transition-all cursor-pointer ${
                       currentTab === "site-topbar"
