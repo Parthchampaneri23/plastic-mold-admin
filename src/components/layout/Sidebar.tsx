@@ -76,6 +76,9 @@ export function Sidebar({ currentTab = "overview", setCurrentTab }: SidebarProps
 
   const handleLogout = async () => {
     try {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("admin_current_tab");
+      }
       await fetch("/api/auth/logout", { method: "POST" });
       router.push("/login");
       router.refresh();

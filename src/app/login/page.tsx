@@ -36,12 +36,13 @@ export default function LoginPage() {
         throw new Error(data.message || "Login failed. Please check credentials.");
       }
 
-      // Successful login -> Redirect to dashboard overview
+      // Successful login -> ALWAYS reset to dashboard overview
       if (typeof window !== "undefined") {
+        localStorage.removeItem("admin_current_tab");
         localStorage.setItem("admin_current_tab", "overview");
+        sessionStorage.setItem("admin_login_fresh", "true");
       }
-      router.push("/dashboard#overview");
-      router.refresh();
+      window.location.href = "/dashboard#overview";
     } catch (err: any) {
       setError(err.message || "Failed to sign in. Please verify your connection.");
     } finally {

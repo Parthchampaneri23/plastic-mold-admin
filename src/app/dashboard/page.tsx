@@ -147,16 +147,28 @@ export default function DashboardPage() {
   // Main content container ref to scroll to top on tab switch
   const mainContentRef = React.useRef<HTMLElement | null>(null);
 
-  // Restore currentTab from URL hash or localStorage on initial client mount
+  // On initial mount or login, ensure overview is selected if coming from login or root
   useEffect(() => {
     if (typeof window !== "undefined") {
+      const isFreshLogin = sessionStorage.getItem("admin_login_fresh") === "true";
+      if (isFreshLogin) {
+        sessionStorage.removeItem("admin_login_fresh");
+        localStorage.setItem("admin_current_tab", "overview");
+        window.location.hash = "overview";
+        setCurrentTab("overview");
+        return;
+      }
+
       const hash = window.location.hash.replace("#", "");
-      if (hash) {
+      if (hash && hash !== "") {
         setCurrentTab(hash);
       } else {
         const storedTab = localStorage.getItem("admin_current_tab");
         if (storedTab) {
           setCurrentTab(storedTab);
+        } else {
+          setCurrentTab("overview");
+          window.location.hash = "overview";
         }
       }
     }
