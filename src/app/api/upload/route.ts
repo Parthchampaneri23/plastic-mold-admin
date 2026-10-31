@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentAdmin } from "@/lib/auth";
+import { put } from "@vercel/blob";
 import path from "path";
 import fs from "fs/promises";
 
@@ -17,19 +18,33 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, message: "No file provided" }, { status: 400 });
     }
 
+    // 1. IF VERCEL BLOB STORAGE TOKEN IS AVAILABLE (On Vercel Live or Local .env)
+    const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
+    if (blobToken) {
+      const safeFilename = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
+      const blob = await put(safeFilename, file, {
+        access: "public",
+        token: blobToken,
+      });
+
+      return NextResponse.json({
+        success: true,
+        url: blob.url,
+        name: file.name,
+        size: file.size,
+      });
+    }
+
+    // 2. FALLBACK FOR LOCAL OFFLINE DEVELOPMENT (Save to disk)
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-
-    // Clean filename
     const safeName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
-    
-    // Save to plastic-mold-admin public/uploads
+
     const uploadDir = path.join(process.cwd(), "public", "uploads");
     await fs.mkdir(uploadDir, { recursive: true });
     const filePath = path.join(uploadDir, safeName);
     await fs.writeFile(filePath, buffer);
 
-    // Also optionally copy to website public/uploads if website exists
     try {
       const websiteUploadDir = path.join(process.cwd(), "..", "plastic-mold-website", "public", "uploads");
       await fs.mkdir(websiteUploadDir, { recursive: true });
