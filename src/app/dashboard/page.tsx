@@ -121,6 +121,9 @@ import { LegalPageEditor } from "@/components/legal/LegalPageEditor";
 // Dashboard Overview Hub Component
 import { DashboardOverview } from "@/components/dashboard/DashboardOverview";
 
+// Inquiry Management Component
+import { InquiryListEditor } from "@/components/inquiries/InquiryListEditor";
+
 export default function DashboardPage() {
   const [currentTab, setCurrentTab] = useState("overview");
   const [loading, setLoading] = useState(true);
@@ -353,10 +356,62 @@ export default function DashboardPage() {
     loadData();
   }, []);
 
+  // Helper to sanitize error strings from API/server and strip unformatted raw HTML tags like <br aria-hidden="true">
+  const cleanErrorMessage = (raw: any): string => {
+    if (!raw) return "An error occurred while saving.";
+    const str = typeof raw === "string" ? raw : String(raw);
+    return str
+      .replace(/<[^>]*>?/gm, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  };
+
   const handleSave = async () => {
     try {
       setSaving(true);
       setError(null);
+
+      // Client-side validation for Product Categories
+      if (currentTab === "product-categories" && productsData?.categories) {
+        const emptyCatIdx = productsData.categories.findIndex(
+          (c: any) => !c.name || c.name.trim() === ""
+        );
+        if (emptyCatIdx !== -1) {
+          setError(`Category #${emptyCatIdx + 1} Name cannot be blank. Please enter a category name.`);
+          setSaving(false);
+          return;
+        }
+
+        // Duplicate check
+        const names = productsData.categories.map((c: any) => (c.name || "").trim().toLowerCase()).filter(Boolean);
+        const hasDuplicates = names.some((n: string, idx: number) => names.indexOf(n) !== idx);
+        if (hasDuplicates) {
+          setError("Category already exists. Category names must be unique.");
+          setSaving(false);
+          return;
+        }
+      }
+
+      // Client-side validation for Home Page Product Categories
+      if (currentTab === "categories" && data?.productCategories) {
+        const emptyCatIdx = data.productCategories.findIndex(
+          (c: any) => !c.name || c.name.trim() === ""
+        );
+        if (emptyCatIdx !== -1) {
+          setError(`Category #${emptyCatIdx + 1} Name cannot be blank. Please enter a category name.`);
+          setSaving(false);
+          return;
+        }
+
+        // Duplicate check
+        const names = data.productCategories.map((c: any) => (c.name || "").trim().toLowerCase()).filter(Boolean);
+        const hasDuplicates = names.some((n: string, idx: number) => names.indexOf(n) !== idx);
+        if (hasDuplicates) {
+          setError("Category already exists. Category names must be unique.");
+          setSaving(false);
+          return;
+        }
+      }
 
       const isAboutSection = currentTab.startsWith("about-");
       const isProductSection = currentTab.startsWith("product-");
@@ -520,10 +575,20 @@ export default function DashboardPage() {
         const resJson = await res.json();
         if (resJson.success) {
           setProductsData(resJson.data);
+          // If product categories were updated, refresh home data in state so categories stay in sync
+          if (currentTab === "product-categories") {
+            try {
+              const homeRes = await fetch("/api/home");
+              const homeJson = await homeRes.json();
+              if (homeJson.success && homeJson.data) {
+                setData(homeJson.data);
+              }
+            } catch {}
+          }
           setSavedToast(true);
           setTimeout(() => setSavedToast(false), 3000);
         } else {
-          setError(resJson.message || "Failed to save Product page content.");
+          setError(cleanErrorMessage(resJson.message || resJson.error || "Failed to save Product page content."));
         }
       } else if (isAboutSection) {
         // Save About Us Content
@@ -538,7 +603,7 @@ export default function DashboardPage() {
           setSavedToast(true);
           setTimeout(() => setSavedToast(false), 3000);
         } else {
-          setError(resJson.message || "Failed to save About page content.");
+          setError(cleanErrorMessage(resJson.message || resJson.error || "Failed to save About page content."));
         }
       } else {
         // Save Home Page / Site Manager Content
@@ -550,14 +615,24 @@ export default function DashboardPage() {
         const resJson = await res.json();
         if (resJson.success) {
           setData(resJson.data);
+          // If Home categories section was updated, refresh products data in state so categories stay in sync
+          if (currentTab === "categories") {
+            try {
+              const prodRes = await fetch("/api/products");
+              const prodJson = await prodRes.json();
+              if (prodJson.success && prodJson.data) {
+                setProductsData(prodJson.data);
+              }
+            } catch {}
+          }
           setSavedToast(true);
           setTimeout(() => setSavedToast(false), 3000);
         } else {
-          setError(resJson.error || "Failed to save content.");
+          setError(cleanErrorMessage(resJson.message || resJson.error || "Failed to save content."));
         }
       }
     } catch (err: any) {
-      setError(err?.message || "Error saving content.");
+      setError(cleanErrorMessage(err?.message || "Error saving content."));
     } finally {
       setSaving(false);
     }
@@ -565,6 +640,10 @@ export default function DashboardPage() {
 
   const getSectionTitle = () => {
     switch (currentTab) {
+      // Inquiries Management
+      case "inquiries-list":
+        return "Customer Inquiries & RFQs / Inquiry List & Management";
+
       // Site Manager
       case "site-brand":
         return "Site Manager / Brand Identity (Logo & Favicon)";
@@ -845,6 +924,7 @@ export default function DashboardPage() {
               onChange={(cats) =>
                 setProductsData({ ...productsData, categories: cats })
               }
+              error={error}
             />
           )}
 
@@ -1343,6 +1423,9 @@ export default function DashboardPage() {
               onChange={(updated) => setTermsData(updated)}
             />
           )}
+
+          {/* INQUIRIES MANAGEMENT TAB */}
+          {currentTab === "inquiries-list" && <InquiryListEditor />}
 
           {/* OVERVIEW TAB */}
           {currentTab === "overview" && (

@@ -11,6 +11,7 @@ import {
   ChevronRight,
   Factory,
   Globe,
+  Inbox,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -229,6 +230,22 @@ export function Sidebar({ currentTab = "overview", setCurrentTab }: SidebarProps
             <span>Dashboard Overview</span>
           </div>
           {currentTab === "overview" && <span className="w-1.5 h-1.5 rounded-full bg-[#ff6b00]" />}
+        </button>
+
+        {/* Inquiries / Lead Desk */}
+        <button
+          onClick={() => setCurrentTab && setCurrentTab("inquiries-list")}
+          className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            currentTab === "inquiries-list"
+              ? "bg-[#0056b3] text-white shadow-sm shadow-[#0056b3]/25"
+              : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+          }`}
+        >
+          <div className="flex items-center gap-2.5">
+            <Inbox className={`w-4 h-4 ${currentTab === "inquiries-list" ? "text-white" : "text-slate-500"}`} />
+            <span>Inquiry Management</span>
+          </div>
+          {currentTab === "inquiries-list" && <span className="w-1.5 h-1.5 rounded-full bg-[#ff6b00]" />}
         </button>
 
         {/* WEBSITE PAGES GROUP */}

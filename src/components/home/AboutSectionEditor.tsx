@@ -1,7 +1,7 @@
 "use client";
 
-import React from "react";
-import { Building, Plus, Trash2, Sparkles } from "lucide-react";
+import React, { useState, useRef } from "react";
+import { Building, Plus, Trash2, Sparkles, CheckCircle2 } from "lucide-react";
 import { ImagePicker } from "@/components/ui/ImagePicker";
 
 interface AboutSectionEditorProps {
@@ -10,6 +10,11 @@ interface AboutSectionEditorProps {
 }
 
 export default function AboutSectionEditor({ data, setData }: AboutSectionEditorProps) {
+  const [newlyAddedStatIndex, setNewlyAddedStatIndex] = useState<number | null>(null);
+  const [feedbackToast, setFeedbackToast] = useState<string | null>(null);
+  const newStatCardRef = useRef<HTMLDivElement | null>(null);
+  const newStatInputRef = useRef<HTMLInputElement | null>(null);
+
   const companyIntro = data?.companyIntro || {
     badge: "ENGINEERING EXCELLENCE SINCE 1994",
     heading: "About Patel Mould Industries",
@@ -39,8 +44,46 @@ export default function AboutSectionEditor({ data, setData }: AboutSectionEditor
     });
   };
 
+  const handleAddCounter = () => {
+    const nextIndex = companyStats.length;
+    const newStat = {
+      value: "100+",
+      label: `New Metric #${nextIndex + 1}`,
+      subtext: "Built for reliable performance",
+    };
+
+    setData({ ...data, companyStats: [...companyStats, newStat] });
+    setNewlyAddedStatIndex(nextIndex);
+    setFeedbackToast(`New Counter Card #${nextIndex + 1} added successfully!`);
+
+    // Auto-scroll, focus on first field, and trigger temporary highlight
+    setTimeout(() => {
+      if (newStatCardRef.current) {
+        newStatCardRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+      if (newStatInputRef.current) {
+        newStatInputRef.current.focus();
+        newStatInputRef.current.select();
+      }
+    }, 100);
+
+    // Fade toast and highlight animation after 4 seconds
+    setTimeout(() => {
+      setFeedbackToast(null);
+      setNewlyAddedStatIndex(null);
+    }, 4000);
+  };
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 relative">
+      {/* Visual Feedback Confirmation Toast */}
+      {feedbackToast && (
+        <div className="fixed top-6 right-6 z-50 flex items-center gap-2.5 px-4 py-3 rounded-xl bg-emerald-600 text-white shadow-xl shadow-emerald-600/25 animate-in slide-in-from-top-3 duration-300 font-medium text-xs">
+          <CheckCircle2 className="w-4 h-4 text-white shrink-0" />
+          <span>{feedbackToast}</span>
+        </div>
+      )}
+
       {/* Top Banner Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-2xl bg-white border border-slate-200 shadow-sm">
         <div>
@@ -167,15 +210,8 @@ export default function AboutSectionEditor({ data, setData }: AboutSectionEditor
           </div>
           <button
             type="button"
-            onClick={() => {
-              const newStat = {
-                value: "100+",
-                label: "New Metric",
-                subtext: "Built for reliable performance",
-              };
-              setData({ ...data, companyStats: [...companyStats, newStat] });
-            }}
-            className="px-3.5 py-2 rounded-xl bg-[#0056b3] hover:bg-[#003d80] text-white text-xs font-bold flex items-center gap-1.5 shadow-sm shadow-[#0056b3]/20 transition-all cursor-pointer self-start sm:self-auto"
+            onClick={handleAddCounter}
+            className="px-3.5 py-2 rounded-xl bg-[#0056b3] hover:bg-[#003d80] text-white text-xs font-bold flex items-center gap-1.5 shadow-sm shadow-[#0056b3]/20 transition-all cursor-pointer self-start sm:self-auto active:scale-95"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Add More Counter</span>
@@ -183,84 +219,101 @@ export default function AboutSectionEditor({ data, setData }: AboutSectionEditor
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {companyStats.map((stat: any, index: number) => (
-            <div
-              key={index}
-              className="p-5 bg-slate-50 hover:bg-white rounded-2xl border border-slate-200 hover:border-[#0056b3] shadow-xs hover:shadow-sm transition-all duration-300 space-y-3 relative group"
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] uppercase font-bold text-[#ff6b00] tracking-wider">
-                  Stat #{index + 1}
-                </span>
-                {companyStats.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (confirm(`Delete stat "${stat.label}"?`)) {
-                        const updated = companyStats.filter((_: any, i: number) => i !== index);
-                        setData({ ...data, companyStats: updated });
-                      }
+          {companyStats.map((stat: any, index: number) => {
+            const isNewlyAdded = index === newlyAddedStatIndex;
+
+            return (
+              <div
+                key={index}
+                ref={isNewlyAdded ? newStatCardRef : null}
+                className={`p-5 rounded-2xl border shadow-xs transition-all duration-300 space-y-3 relative group ${
+                  isNewlyAdded
+                    ? "bg-amber-50/70 border-amber-400 ring-2 ring-amber-400/50 shadow-lg scale-[1.02]"
+                    : "bg-slate-50 hover:bg-white border-slate-200 hover:border-[#0056b3] hover:shadow-sm"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] uppercase font-bold text-[#ff6b00] tracking-wider">
+                      Stat #{index + 1}
+                    </span>
+                    {isNewlyAdded && (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500 text-white animate-pulse">
+                        New
+                      </span>
+                    )}
+                  </div>
+                  {companyStats.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (confirm(`Delete stat "${stat.label}"?`)) {
+                          const updated = companyStats.filter((_: any, i: number) => i !== index);
+                          setData({ ...data, companyStats: updated });
+                        }
+                      }}
+                      title="Delete counter"
+                      className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
+                    Metric Number Value
+                  </label>
+                  <input
+                    ref={isNewlyAdded ? newStatInputRef : null}
+                    type="text"
+                    value={stat.value || ""}
+                    placeholder="30+"
+                    onChange={(e) => {
+                      const updated = [...companyStats];
+                      updated[index].value = e.target.value;
+                      setData({ ...data, companyStats: updated });
                     }}
-                    title="Delete counter"
-                    className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                )}
-              </div>
+                    className="w-full font-black text-xl text-[#0056b3] px-3 py-1.5 bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-[#0056b3]"
+                  />
+                </div>
 
-              <div>
-                <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
-                  Metric Number Value
-                </label>
-                <input
-                  type="text"
-                  value={stat.value || ""}
-                  placeholder="30+"
-                  onChange={(e) => {
-                    const updated = [...companyStats];
-                    updated[index].value = e.target.value;
-                    setData({ ...data, companyStats: updated });
-                  }}
-                  className="w-full font-black text-xl text-[#0056b3] px-3 py-1.5 bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-[#0056b3]"
-                />
-              </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
+                    Primary Label
+                  </label>
+                  <input
+                    type="text"
+                    value={stat.label || ""}
+                    placeholder="Years of Experience"
+                    onChange={(e) => {
+                      const updated = [...companyStats];
+                      updated[index].label = e.target.value;
+                      setData({ ...data, companyStats: updated });
+                    }}
+                    className="w-full text-xs font-bold text-slate-800 px-3 py-1.5 bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-[#0056b3]"
+                  />
+                </div>
 
-              <div>
-                <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
-                  Primary Label
-                </label>
-                <input
-                  type="text"
-                  value={stat.label || ""}
-                  placeholder="Years of Experience"
-                  onChange={(e) => {
-                    const updated = [...companyStats];
-                    updated[index].label = e.target.value;
-                    setData({ ...data, companyStats: updated });
-                  }}
-                  className="w-full text-xs font-bold text-slate-800 px-3 py-1.5 bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-[#0056b3]"
-                />
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
+                    Subtext Description
+                  </label>
+                  <input
+                    type="text"
+                    value={stat.subtext || ""}
+                    placeholder="Established since 1994"
+                    onChange={(e) => {
+                      const updated = [...companyStats];
+                      updated[index].subtext = e.target.value;
+                      setData({ ...data, companyStats: updated });
+                    }}
+                    className="w-full text-[11px] text-slate-500 px-3 py-1.5 bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-[#0056b3]"
+                  />
+                </div>
               </div>
-
-              <div>
-                <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
-                  Subtext Description
-                </label>
-                <input
-                  type="text"
-                  value={stat.subtext || ""}
-                  placeholder="Established since 1994"
-                  onChange={(e) => {
-                    const updated = [...companyStats];
-                    updated[index].subtext = e.target.value;
-                    setData({ ...data, companyStats: updated });
-                  }}
-                  className="w-full text-[11px] text-slate-500 px-3 py-1.5 bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-[#0056b3]"
-                />
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

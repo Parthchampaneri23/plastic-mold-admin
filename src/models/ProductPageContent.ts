@@ -34,6 +34,9 @@ export interface ICategoryItem {
   label: string; // e.g. 'PREFORM & JAR MOULDS'
   description?: string;
   image?: string;
+  isActive?: boolean;
+  order?: number;
+  seo?: IProductSeo;
 }
 
 export interface IProductFaq {
@@ -121,6 +124,9 @@ const CategoryItemSchema = new Schema(
     label: { type: String, required: true },
     description: { type: String, default: "" },
     image: { type: String, default: "" },
+    isActive: { type: Boolean, default: true },
+    order: { type: Number, default: 0 },
+    seo: { type: ProductSeoSchema, default: () => ({}) },
   },
   { _id: false }
 );

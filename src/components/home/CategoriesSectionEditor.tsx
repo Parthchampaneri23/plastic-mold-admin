@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Layers, Plus, Trash2, ArrowRight } from "lucide-react";
+import { Layers, Plus, Trash2, ArrowRight, ArrowUp, ArrowDown } from "lucide-react";
 import { ImagePicker } from "@/components/ui/ImagePicker";
 
 interface CategoriesSectionEditorProps {
@@ -214,73 +214,174 @@ export default function CategoriesSectionEditor({ data, setData }: CategoriesSec
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {categories.map((cat: any, index: number) => (
-            <div
-              key={cat.id || index}
-              className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm hover:border-[#0056b3] transition-all duration-300 space-y-4 flex flex-col justify-between group"
-            >
-              <div className="space-y-4">
-                {/* Header Row: Category Number & Delete */}
-                <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-                  <span className="text-[11px] font-bold text-slate-900 uppercase tracking-wider">
-                    Category #{index + 1}: {cat.name}
-                  </span>
-                  {categories.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (confirm(`Delete category "${cat.name}"?`)) {
-                          const updated = categories.filter((_: any, i: number) => i !== index);
-                          setData({ ...data, productCategories: updated });
-                        }
-                      }}
-                      title="Delete category"
-                      className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-                </div>
+          {categories.map((cat: any, index: number) => {
+            const isBlank = !cat.name || cat.name.trim() === "";
+            const isDuplicate = Boolean(
+              cat.name &&
+              categories.some(
+                (otherCat: any, otherIdx: number) =>
+                  otherIdx !== index &&
+                  otherCat.name &&
+                  otherCat.name.trim().toLowerCase() === cat.name.trim().toLowerCase()
+              )
+            );
+            const hasError = isBlank || isDuplicate;
 
-                {/* Photo Preview & Picker */}
-                <div className="space-y-2">
-                  <div className="relative h-48 sm:h-52 rounded-2xl overflow-hidden bg-slate-900 border border-slate-200 shadow-inner group/img">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={cat.image || "/Home/preform-mold.png"}
-                      alt={cat.name}
-                      className="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-500"
+            return (
+              <div
+                key={cat.id || index}
+                className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm hover:border-[#0056b3] transition-all duration-300 space-y-4 flex flex-col justify-between group"
+              >
+                <div className="space-y-4">
+                  {/* Header Row: Category Number & Delete */}
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-[11px] font-bold text-slate-900 uppercase tracking-wider truncate">
+                        Category #{index + 1}: {cat.name}
+                      </span>
+                      <span
+                        className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider shrink-0 ${
+                          cat.isActive !== false
+                            ? "bg-emerald-100 text-emerald-800"
+                            : "bg-slate-200 text-slate-600"
+                        }`}
+                      >
+                        {cat.isActive !== false ? "Active" : "Inactive"}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-0.5">
+                        <button
+                          type="button"
+                          disabled={index === 0}
+                          onClick={() => {
+                            const updated = [...categories];
+                            const temp = updated[index];
+                            updated[index] = updated[index - 1];
+                            updated[index - 1] = temp;
+                            setData({ ...data, productCategories: updated.map((c, i) => ({ ...c, order: i + 1 })) });
+                          }}
+                          className="p-1 text-slate-400 hover:text-[#0056b3] disabled:opacity-20 rounded hover:bg-blue-50 transition"
+                          title="Move category left/up"
+                        >
+                          <ArrowUp className="w-3 h-3" />
+                        </button>
+                        <button
+                          type="button"
+                          disabled={index === categories.length - 1}
+                          onClick={() => {
+                            const updated = [...categories];
+                            const temp = updated[index];
+                            updated[index] = updated[index + 1];
+                            updated[index + 1] = temp;
+                            setData({ ...data, productCategories: updated.map((c, i) => ({ ...c, order: i + 1 })) });
+                          }}
+                          className="p-1 text-slate-400 hover:text-[#0056b3] disabled:opacity-20 rounded hover:bg-blue-50 transition"
+                          title="Move category right/down"
+                        >
+                          <ArrowDown className="w-3 h-3" />
+                        </button>
+                      </div>
+                      {categories.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (confirm(`Delete category "${cat.name}"?`)) {
+                              const updated = categories.filter((_: any, i: number) => i !== index);
+                              setData({ ...data, productCategories: updated });
+                            }
+                          }}
+                          title="Delete category"
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Active / Inactive Status Toggle */}
+                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+                    <div>
+                      <span className="block text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                        Website Visibility
+                      </span>
+                      <span className="text-[10px] text-slate-500">
+                        {cat.isActive !== false ? "Visible on Home Page" : "Hidden from Home Page"}
+                      </span>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={cat.isActive !== false}
+                        onChange={(e) => {
+                          const updated = [...categories];
+                          updated[index].isActive = e.target.checked;
+                          setData({ ...data, productCategories: updated });
+                        }}
+                        className="sr-only peer"
+                      />
+                      <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#0056b3]"></div>
+                    </label>
+                  </div>
+
+                  {/* Photo Preview & Picker */}
+                  <div className="space-y-2">
+                    <div className="relative h-48 sm:h-52 rounded-2xl overflow-hidden bg-slate-900 border border-slate-200 shadow-inner group/img">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={cat.image || "/Home/preform-mold.png"}
+                        alt={cat.name}
+                        className="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-500"
+                      />
+                    </div>
+                    <ImagePicker
+                      label="Category Showcase Photo"
+                      value={cat.image || "/Home/preform-mold.png"}
+                      onChange={(url) => {
+                        const updated = [...categories];
+                        updated[index].image = url;
+                        setData({ ...data, productCategories: updated });
+                      }}
+                      helperText="Upload category mold photo (e.g. /Home/preform-mold.png)"
                     />
                   </div>
-                  <ImagePicker
-                    label="Category Showcase Photo"
-                    value={cat.image || "/Home/preform-mold.png"}
-                    onChange={(url) => {
-                      const updated = [...categories];
-                      updated[index].image = url;
-                      setData({ ...data, productCategories: updated });
-                    }}
-                    helperText="Upload category mold photo (e.g. /Home/preform-mold.png)"
-                  />
-                </div>
 
-                {/* Category Title */}
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                    Category Name
-                  </label>
-                  <input
-                    type="text"
-                    value={cat.name || ""}
-                    placeholder="e.g. Preform & Jar Mold"
-                    onChange={(e) => {
-                      const updated = [...categories];
-                      updated[index].name = e.target.value;
-                      setData({ ...data, productCategories: updated });
-                    }}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:border-[#0056b3] focus:bg-white"
-                  />
-                </div>
+                  {/* Category Title */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                        Category Name <span className="text-red-500">*</span>
+                      </label>
+                      {hasError && (
+                        <span className="text-[10px] font-bold text-red-600">
+                          {isDuplicate ? "Category already exists." : "Category Name is required"}
+                        </span>
+                      )}
+                    </div>
+                    <input
+                      type="text"
+                      value={cat.name || ""}
+                      placeholder="e.g. Preform & Jar Mold"
+                      onChange={(e) => {
+                        const updated = [...categories];
+                        updated[index].name = e.target.value;
+                        setData({ ...data, productCategories: updated });
+                      }}
+                      className={`w-full px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all focus:outline-none ${
+                        hasError
+                          ? "border-2 border-red-500 bg-red-50/50 text-slate-900 focus:border-red-600 focus:ring-2 focus:ring-red-500/20"
+                          : "border border-slate-200 bg-slate-50 text-slate-900 focus:border-[#0056b3] focus:bg-white"
+                      }`}
+                    />
+                    {hasError && (
+                      <p className="mt-1 text-[11px] text-red-600 font-medium">
+                        {isDuplicate
+                          ? "Category already exists. Category names must be unique."
+                          : "Category Name cannot be blank."}
+                      </p>
+                    )}
+                  </div>
 
                 {/* Short Description */}
                 <div>
@@ -297,6 +398,27 @@ export default function CategoriesSectionEditor({ data, setData }: CategoriesSec
                       setData({ ...data, productCategories: updated });
                     }}
                     className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 leading-relaxed focus:outline-none focus:border-[#0056b3] focus:bg-white"
+                  />
+                </div>
+
+                {/* Display Order Sequence Field */}
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Display Order / Sequence
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={cat.order !== undefined ? cat.order : index + 1}
+                    onChange={(e) => {
+                      const newOrder = parseInt(e.target.value, 10);
+                      if (!isNaN(newOrder)) {
+                        const updated = [...categories];
+                        updated[index].order = newOrder;
+                        setData({ ...data, productCategories: updated });
+                      }
+                    }}
+                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-none focus:border-[#0056b3] focus:bg-white"
                   />
                 </div>
 
@@ -327,8 +449,9 @@ export default function CategoriesSectionEditor({ data, setData }: CategoriesSec
                 </div>
               </div>
             </div>
-          ))}
-        </div>
+          );
+        })}
+      </div>
       </div>
     </div>
   );

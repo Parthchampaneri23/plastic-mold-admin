@@ -93,15 +93,15 @@ export function ImagePicker({
 
   return (
     <>
-      <div className="space-y-1.5">
-        <div className="flex items-center justify-between">
+      <div className="space-y-1.5 w-full min-w-0">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
           <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
             {label}
           </label>
           {helperText && <span className="text-[10px] text-slate-500 font-medium">{helperText}</span>}
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full min-w-0">
           {/* Thumbnail Preview with Click-to-Enlarge Overlay */}
           <div
             onClick={() => hasValidImage && setIsModalOpen(true)}
@@ -136,8 +136,8 @@ export function ImagePicker({
             )}
           </div>
 
-          {/* Input & Upload Button */}
-          <div className="flex-1 flex gap-2">
+          {/* Input & Upload Button Controls */}
+          <div className="flex-1 flex flex-wrap sm:flex-nowrap gap-2 min-w-0 w-full">
             <input
               type="text"
               value={value || ""}
@@ -146,43 +146,45 @@ export function ImagePicker({
                 onChange(e.target.value);
               }}
               placeholder="/Home/Banner1.png or https://..."
-              className="flex-1 px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-800 text-xs font-medium focus:outline-none focus:border-[#0056b3] focus:ring-1 focus:ring-[#0056b3] placeholder:text-slate-400 shadow-xs"
+              className="min-w-0 flex-1 w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-800 text-xs font-medium focus:outline-none focus:border-[#0056b3] focus:ring-1 focus:ring-[#0056b3] placeholder:text-slate-400 shadow-xs"
             />
 
-            {/* Quick Preview Button */}
-            {hasValidImage && (
+            <div className="flex items-center gap-1.5 shrink-0">
+              {/* Quick Preview Button */}
+              {hasValidImage && (
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(true)}
+                  title="Preview image in full view"
+                  className="px-2.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-[#0056b3] border border-blue-200 text-xs font-bold flex items-center gap-1 transition-all cursor-pointer shadow-xs shrink-0"
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                  <span className="text-[11px]">Preview</span>
+                </button>
+              )}
+
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                accept="image/*"
+                className="hidden"
+              />
+
               <button
                 type="button"
-                onClick={() => setIsModalOpen(true)}
-                title="Preview image in full view"
-                className="px-3 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-[#0056b3] border border-blue-200 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
+                disabled={uploading}
+                onClick={() => fileInputRef.current?.click()}
+                className="px-3 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 shrink-0 shadow-xs"
               >
-                <Eye className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Preview</span>
+                {uploading ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-[#0056b3]" />
+                ) : (
+                  <Upload className="w-3.5 h-3.5 text-[#0056b3]" />
+                )}
+                <span className="whitespace-nowrap">{uploading ? "Uploading..." : "Upload File"}</span>
               </button>
-            )}
-
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-              accept="image/*"
-              className="hidden"
-            />
-
-            <button
-              type="button"
-              disabled={uploading}
-              onClick={() => fileInputRef.current?.click()}
-              className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 shrink-0 shadow-xs"
-            >
-              {uploading ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin text-[#0056b3]" />
-              ) : (
-                <Upload className="w-3.5 h-3.5 text-[#0056b3]" />
-              )}
-              <span>{uploading ? "Uploading..." : "Upload File"}</span>
-            </button>
+            </div>
           </div>
         </div>
 

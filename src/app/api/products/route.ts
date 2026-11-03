@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import { ProductPageContent } from "@/models/ProductPageContent";
+import { HomePageContent } from "@/models/HomePageContent";
 import { getCurrentAdmin } from "@/lib/auth";
 import {
   DEFAULT_PRODUCT_HERO,
@@ -85,6 +86,33 @@ export async function PUT(req: NextRequest) {
     const body = await req.json();
     await connectDB();
 
+    // Validate duplicate categories
+    if (body.categories && Array.isArray(body.categories)) {
+      const trimmedNames = body.categories
+        .map((c: any) => (typeof c.name === "string" ? c.name.trim().toLowerCase() : ""))
+        .filter(Boolean);
+
+      const seen = new Set<string>();
+      let duplicateName: string | null = null;
+      for (const name of trimmedNames) {
+        if (seen.has(name)) {
+          duplicateName = name;
+          break;
+        }
+        seen.add(name);
+      }
+
+      if (duplicateName) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Category already exists. Category names must be unique.",
+          },
+          { status: 400 }
+        );
+      }
+    }
+
     let content = await ProductPageContent.findOne();
     if (!content) {
       content = new ProductPageContent(body);
@@ -95,6 +123,38 @@ export async function PUT(req: NextRequest) {
     }
 
     await content.save();
+
+    // Synchronize categories with HomePageContent.productCategories
+    if (body.categories !== undefined && Array.isArray(body.categories)) {
+      try {
+        let homeContent = await HomePageContent.findOne();
+        if (homeContent) {
+          const existingHomeCats: any[] = homeContent.productCategories || [];
+          const updatedHomeCats = body.categories.map((cat: any) => {
+            const existing: any = existingHomeCats.find(
+              (h: any) => h.id === cat.id || h.id === cat.slug || h.name === cat.name
+            );
+            return {
+              id: cat.id || cat.slug,
+              name: cat.name,
+              shortDesc: cat.description || existing?.shortDesc || "Precision tooling engineered for high performance.",
+              image: cat.image || existing?.image || "/Home/preform-mold.png",
+              buttonText: existing?.buttonText || "View Products",
+              link: existing?.link || `/products?category=${cat.slug || cat.id}#catalog`,
+              features: existing?.features || ["Precision CNC Machined", "High Durability Tool Steel"],
+              productCount: existing?.productCount || 0,
+              isActive: cat.isActive !== undefined ? cat.isActive : (existing?.isActive !== undefined ? existing.isActive : true),
+              order: cat.order !== undefined ? cat.order : (existing?.order !== undefined ? existing.order : 0),
+              seo: cat.seo || existing?.seo || {},
+            };
+          });
+          homeContent.productCategories = updatedHomeCats;
+          await homeContent.save();
+        }
+      } catch (syncErr) {
+        console.warn("Could not sync categories to HomePageContent:", syncErr);
+      }
+    }
 
     return NextResponse.json({
       success: true,

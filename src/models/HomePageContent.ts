@@ -30,6 +30,15 @@ export interface IProductCategory {
   image: string;
   features: string[];
   productCount: number;
+  isActive?: boolean;
+  order?: number;
+  seo?: {
+    metaTitle?: string;
+    metaDescription?: string;
+    metaKeywords?: string;
+    canonicalUrl?: string;
+    schemaJson?: string;
+  };
 }
 
 export interface ICapability {
@@ -213,11 +222,13 @@ export interface IHomePageContent extends Document {
   companyIntro: {
     badge: string;
     heading: string;
-    highlightHeading: string;
+    highlightHeading?: string;
     paragraph1: string;
     paragraph2: string;
-    statNumber: string;
-    statText: string;
+    paragraph3?: string;
+    image?: string;
+    statNumber?: string;
+    statText?: string;
   };
   inquiryCta: {
     badge: string;
@@ -299,6 +310,8 @@ const HomePageContentSchema = new Schema<IHomePageContent>(
       highlightHeading: { type: String, default: "High-Precision Mold Manufacturing" },
       paragraph1: { type: String, default: "Founded in 1994, Patel Mould Industries has emerged as a premier manufacturer of high-cavitation PET preform molds, single-stage ISBM molds, and extrusion blow molds (EBM) in India." },
       paragraph2: { type: String, default: "With state-of-the-art 5-axis CNC machining, Makino mirror spark erosion EDM, and Japanese high-speed milling, we guarantee sub-micron cavity accuracy and multi-million shot mold longevity." },
+      paragraph3: { type: String, default: "We specialize in custom multi-cavity mould solutions engineered for zero-flash production, rapid cycle times, and guaranteed 5M+ shot tool life — supporting premier beverage bottlers, FMCG brands, and pharmaceutical manufacturers across India and globally." },
+      image: { type: String, default: "/Home/company image about.png" },
       statNumber: { type: String, default: "30+" },
       statText: { type: String, default: "Years of Engineering Expertise" },
     },

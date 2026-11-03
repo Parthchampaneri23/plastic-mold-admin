@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import { HomePageContent } from "@/models/HomePageContent";
+import { ProductPageContent } from "@/models/ProductPageContent";
 import { getCurrentAdmin } from "@/lib/auth";
 
 // Public GET endpoint: used by plastic-mold-website & admin panel
@@ -36,6 +37,33 @@ export async function PUT(req: NextRequest) {
     const body = await req.json();
     await connectDB();
 
+    // Validate duplicate product categories if updating home categories
+    if (body.productCategories && Array.isArray(body.productCategories)) {
+      const trimmedNames = body.productCategories
+        .map((c: any) => (typeof c.name === "string" ? c.name.trim().toLowerCase() : ""))
+        .filter(Boolean);
+
+      const seen = new Set<string>();
+      let duplicateName: string | null = null;
+      for (const name of trimmedNames) {
+        if (seen.has(name)) {
+          duplicateName = name;
+          break;
+        }
+        seen.add(name);
+      }
+
+      if (duplicateName) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Category already exists. Category names must be unique.",
+          },
+          { status: 400 }
+        );
+      }
+    }
+
     let content = await HomePageContent.findOne();
     if (!content) {
       content = new HomePageContent(body);
@@ -62,6 +90,40 @@ export async function PUT(req: NextRequest) {
     }
 
     await content.save();
+
+    // Synchronize productCategories with ProductPageContent.categories
+    if (body.productCategories !== undefined && Array.isArray(body.productCategories)) {
+      try {
+        let productPage = await ProductPageContent.findOne();
+        if (productPage) {
+          const existingProductCats = productPage.categories || [];
+          const updatedProductCats = body.productCategories.map((homeCat: any) => {
+            const existing = existingProductCats.find(
+              (p: any) => p.id === homeCat.id || p.slug === homeCat.id || p.name === homeCat.name
+            );
+            const derivedSlug = (homeCat.id || homeCat.name || "category")
+              .toLowerCase()
+              .replace(/-mold$|-mould$/, "")
+              .replace(/\s+/g, "-");
+            return {
+              id: existing?.id || homeCat.id,
+              slug: existing?.slug || derivedSlug,
+              name: homeCat.name,
+              label: existing?.label || homeCat.name.toUpperCase(),
+              description: homeCat.shortDesc || existing?.description || "",
+              image: homeCat.image || existing?.image || "/product/pet-preform-mold.png",
+              isActive: homeCat.isActive !== undefined ? homeCat.isActive : (existing?.isActive !== undefined ? existing.isActive : true),
+              order: homeCat.order !== undefined ? homeCat.order : (existing?.order !== undefined ? existing.order : 0),
+              seo: homeCat.seo || existing?.seo || {},
+            };
+          });
+          productPage.categories = updatedProductCats;
+          await productPage.save();
+        }
+      } catch (syncErr) {
+        console.warn("Could not sync categories to ProductPageContent:", syncErr);
+      }
+    }
 
     return NextResponse.json({
       success: true,

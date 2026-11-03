@@ -54,10 +54,14 @@ export function ProductListEditor({
   const currentProduct = products[currentIdx] || products[0];
 
   const handleUpdateProduct = (field: keyof IProductItem, value: any) => {
+    handleUpdateProductFields({ [field]: value });
+  };
+
+  const handleUpdateProductFields = (fields: Partial<IProductItem>) => {
     const updated = [...products];
     updated[currentIdx] = {
       ...updated[currentIdx],
-      [field]: value,
+      ...fields,
     };
     onChange(updated);
   };
@@ -554,17 +558,20 @@ export function ProductListEditor({
                       <select
                         value={currentProduct.categorySlug || ""}
                         onChange={(e) => {
-                          const chosen = categories.find((c) => c.slug === e.target.value);
+                          const val = e.target.value;
+                          const chosen = categories.find((c) => c.slug === val || c.id === val);
                           if (chosen) {
-                            handleUpdateProduct("categorySlug", chosen.slug);
-                            handleUpdateProduct("category", chosen.name);
+                            handleUpdateProductFields({
+                              categorySlug: chosen.slug || chosen.id,
+                              category: chosen.name,
+                            });
                           }
                         }}
                         className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-[#0056b3] bg-white"
                       >
                         {categories.map((c) => (
-                          <option key={c.slug} value={c.slug}>
-                            {c.name} ({c.slug})
+                          <option key={c.slug || c.id} value={c.slug || c.id}>
+                            {c.name} ({c.slug || c.id})
                           </option>
                         ))}
                       </select>
