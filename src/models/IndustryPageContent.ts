@@ -31,6 +31,7 @@ export interface IIndustryItem {
   relatedProductSlugs: string[];
   faqs?: IIndustryFaq[];
   order?: number;
+  isActive?: boolean;
 }
 
 export interface IIndustriesHero {
@@ -97,6 +98,7 @@ const IndustryItemSchema = new Schema(
     relatedProductSlugs: [{ type: String }],
     faqs: [IndustryFaqSchema],
     order: { type: Number, default: 0 },
+    isActive: { type: Boolean, default: true },
   },
   { _id: false }
 );

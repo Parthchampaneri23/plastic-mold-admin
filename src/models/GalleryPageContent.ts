@@ -4,11 +4,13 @@ import {
   GalleryIntroData,
   FeaturedCollectionItem,
   GalleryItem,
+  IGalleryCategoryItem,
 } from "../data/defaultGallery";
 
 export interface IGalleryPageContent extends Document {
   heroBanner: GalleryHeroBannerData;
   intro: GalleryIntroData;
+  categories: IGalleryCategoryItem[];
   featuredCollections: FeaturedCollectionItem[];
   items: GalleryItem[];
   updatedAt: Date;
@@ -81,6 +83,21 @@ const GalleryItemSchema = new Schema(
     specifications: [GallerySpecificationSchema],
     applicationContext: { type: String, default: "" },
     relatedCategoryLink: { type: String, default: "" },
+    isActive: { type: Boolean, default: true },
+    order: { type: Number, default: 0 },
+  },
+  { _id: false }
+);
+
+const GalleryCategorySchema = new Schema(
+  {
+    id: { type: String, required: true },
+    name: { type: String, required: true },
+    slug: { type: String, required: true },
+    description: { type: String, default: "" },
+    badge: { type: String, default: "" },
+    order: { type: Number, default: 0 },
+    isActive: { type: Boolean, default: true },
   },
   { _id: false }
 );
@@ -89,6 +106,7 @@ const GalleryPageContentSchema = new Schema<IGalleryPageContent>(
   {
     heroBanner: { type: GalleryHeroBannerSchema, default: () => ({}) },
     intro: { type: GalleryIntroSchema, default: () => ({}) },
+    categories: [GalleryCategorySchema],
     featuredCollections: [FeaturedCollectionItemSchema],
     items: [GalleryItemSchema],
   },

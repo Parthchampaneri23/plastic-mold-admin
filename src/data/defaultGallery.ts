@@ -2,7 +2,7 @@ export interface GalleryItem {
   id: string;
   slug: string;
   title: string;
-  category: 'Manufacturing Facility' | 'Machinery' | 'Mold Manufacturing' | 'Products' | 'Quality Inspection' | 'Completed Projects';
+  category: string;
   image: string;
   alt: string;
   badge: string;
@@ -10,27 +10,89 @@ export interface GalleryItem {
   fullDescription: string;
   aspectRatio: 'landscape' | 'portrait' | 'square' | 'wide';
   featured?: boolean;
-  featuredCollection?: 'Inside Our Facility' | 'Precision in Every Detail' | 'Engineered Mold Solutions';
+  featuredCollection?: string;
   keyHighlights: string[];
   specifications?: { label: string; value: string }[];
   applicationContext?: string;
   relatedCategoryLink?: string;
+  isActive?: boolean;
+  order?: number;
 }
 
-export type GalleryCategory =
-  | 'All Images'
-  | 'Manufacturing Facility'
-  | 'Machinery'
-  | 'Mold Manufacturing'
-  | 'Products'
-  | 'Quality Inspection'
-  | 'Completed Projects';
+export interface IGalleryCategoryItem {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  badge?: string;
+  order?: number;
+  isActive?: boolean;
+}
 
-export const GALLERY_CATEGORIES: GalleryCategory[] = [
+export type GalleryCategory = string;
+
+export const DEFAULT_GALLERY_CATEGORIES_LIST: IGalleryCategoryItem[] = [
+  {
+    id: "gal-cat-facility",
+    name: "Manufacturing Facility",
+    slug: "manufacturing-facility",
+    description: "State-of-the-art precision tooling bays and assembly infrastructure",
+    badge: "Facility",
+    order: 1,
+    isActive: true,
+  },
+  {
+    id: "gal-cat-machinery",
+    name: "Machinery",
+    slug: "machinery",
+    description: "High-speed 5-axis CNC, EDM spark erosion, and cylindrical grinders",
+    badge: "CNC & Toolroom",
+    order: 2,
+    isActive: true,
+  },
+  {
+    id: "gal-cat-mold-mfg",
+    name: "Mould Manufacturing",
+    slug: "mould-manufacturing",
+    description: "Multi-cavity preform moulds, hot runner manifolds, and precision cores",
+    badge: "Mould Making",
+    order: 3,
+    isActive: true,
+  },
+  {
+    id: "gal-cat-products",
+    name: "Products",
+    slug: "products",
+    description: "Finished plastic mould products, preforms, caps, closures, and containers",
+    badge: "Tooling Output",
+    order: 4,
+    isActive: true,
+  },
+  {
+    id: "gal-cat-quality",
+    name: "Quality Inspection",
+    slug: "quality-inspection",
+    description: "Zeiss 3D CMM metrology, optical profile projectors, and quality testing labs",
+    badge: "Metrology & QA",
+    order: 5,
+    isActive: true,
+  },
+  {
+    id: "gal-cat-projects",
+    name: "Completed Projects",
+    slug: "completed-projects",
+    description: "Turnkey client mould tooling deliveries and customer success projects",
+    badge: "Client Tooling",
+    order: 6,
+    isActive: true,
+  },
+];
+
+export const GALLERY_CATEGORIES: string[] = [
   'All Images',
   'Manufacturing Facility',
   'Machinery',
-  'Mold Manufacturing',
+  'Mould Manufacturing',
   'Products',
   'Quality Inspection',
   'Completed Projects',
@@ -599,6 +661,7 @@ export interface FeaturedCollectionItem {
 export interface GalleryPageContentData {
   heroBanner: GalleryHeroBannerData;
   intro: GalleryIntroData;
+  categories: IGalleryCategoryItem[];
   featuredCollections: FeaturedCollectionItem[];
   items: GalleryItem[];
 }
@@ -617,6 +680,7 @@ export const defaultGalleryPageContent: GalleryPageContentData = {
     headingHighlight: "Precision Portfolio",
     description: "Explore the Patel Mould Industries manufacturing facility, high-speed 5-axis CNC machinery, spark EDM toolroom, precision PET preform molds, and Zeiss 3D CMM quality inspection in Gujarat, India.",
   },
+  categories: DEFAULT_GALLERY_CATEGORIES_LIST,
   featuredCollections: [
     {
       title: "Inside Our Facility",

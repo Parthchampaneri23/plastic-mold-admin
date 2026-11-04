@@ -96,6 +96,7 @@ import {
 // Gallery Page Editors
 import {
   GalleryHeroIntroEditor,
+  GalleryCategoriesEditor,
   FeaturedCollectionsEditor,
   GalleryItemsEditor,
 } from "@/components/gallery";
@@ -408,6 +409,71 @@ export default function DashboardPage() {
         const hasDuplicates = names.some((n: string, idx: number) => names.indexOf(n) !== idx);
         if (hasDuplicates) {
           setError("Category already exists. Category names must be unique.");
+          setSaving(false);
+          return;
+        }
+      }
+
+      // Client-side validation for Gallery Categories
+      if (currentTab === "gallery-categories" && galleryData?.categories) {
+        const emptyCatIdx = galleryData.categories.findIndex(
+          (c: any) => !c.name || c.name.trim() === ""
+        );
+        if (emptyCatIdx !== -1) {
+          setError(`Category #${emptyCatIdx + 1} Name cannot be blank. Please enter a category name.`);
+          setSaving(false);
+          return;
+        }
+
+        // Duplicate check (case-insensitive)
+        const names = galleryData.categories.map((c: any) => (c.name || "").trim().toLowerCase()).filter(Boolean);
+        const hasDuplicates = names.some((n: string, idx: number) => names.indexOf(n) !== idx);
+        if (hasDuplicates) {
+          setError("Category already exists. Category names must be unique.");
+          setSaving(false);
+          return;
+        }
+      }
+
+      // Client-side validation for Industries
+      if (currentTab.startsWith("industry-") && industriesData?.industries) {
+        for (let i = 0; i < industriesData.industries.length; i++) {
+          const ind = industriesData.industries[i];
+          if (!ind.name || !ind.name.trim()) {
+            setError(`Industry #${i + 1}: Industry Name is required and cannot be blank.`);
+            setSaving(false);
+            return;
+          }
+          if (!ind.slug || !ind.slug.trim()) {
+            setError(`Industry "${ind.name}": URL Slug is required and cannot be blank.`);
+            setSaving(false);
+            return;
+          }
+          if (!ind.shortDescription || !ind.shortDescription.trim()) {
+            setError(`Industry "${ind.name}": Card Short Description is required.`);
+            setSaving(false);
+            return;
+          }
+          if (!ind.image || !ind.image.trim()) {
+            setError(`Industry "${ind.name}": Primary Image is required.`);
+            setSaving(false);
+            return;
+          }
+        }
+
+        // Check for duplicate names and slugs
+        const names = industriesData.industries.map((ind: any) => (ind.name || "").trim().toLowerCase()).filter(Boolean);
+        const hasDuplicateName = names.some((n: string, idx: number) => names.indexOf(n) !== idx);
+        if (hasDuplicateName) {
+          setError("Industry name already exists. Industry names must be unique.");
+          setSaving(false);
+          return;
+        }
+
+        const slugs = industriesData.industries.map((ind: any) => (ind.slug || "").trim().toLowerCase()).filter(Boolean);
+        const hasDuplicateSlug = slugs.some((s: string, idx: number) => slugs.indexOf(s) !== idx);
+        if (hasDuplicateSlug) {
+          setError("Industry URL slug already exists. Slugs must be unique.");
           setSaving(false);
           return;
         }
@@ -1173,6 +1239,8 @@ export default function DashboardPage() {
           {currentTab === "industry-list" && industriesData && (
             <IndustryListEditor
               industries={industriesData.industries || []}
+              availableProducts={productsData?.products || []}
+              error={error}
               onChange={(industries) =>
                 setIndustriesData({ ...industriesData, industries })
               }
@@ -1293,7 +1361,24 @@ export default function DashboardPage() {
             />
           )}
 
-          {/* GALLERY: SECTION 2 - FEATURED COLLECTIONS */}
+          {/* GALLERY: SECTION 2 - PRODUCT & GALLERY CATEGORIES */}
+          {currentTab === "gallery-categories" && galleryData && (
+            <GalleryCategoriesEditor
+              categories={galleryData.categories || []}
+              error={error}
+              galleryItemsCount={
+                galleryData.items?.reduce((acc: Record<string, number>, item: any) => {
+                  acc[item.category] = (acc[item.category] || 0) + 1;
+                  return acc;
+                }, {}) || {}
+              }
+              onChange={(categories) =>
+                setGalleryData({ ...galleryData, categories })
+              }
+            />
+          )}
+
+          {/* GALLERY: SECTION 3 - FEATURED COLLECTIONS */}
           {currentTab === "gallery-featured" && galleryData && (
             <FeaturedCollectionsEditor
               collections={galleryData.featuredCollections}
@@ -1303,10 +1388,11 @@ export default function DashboardPage() {
             />
           )}
 
-          {/* GALLERY: SECTION 3 - ITEMS & MEDIA LIBRARY */}
+          {/* GALLERY: SECTION 4 - ITEMS & MEDIA LIBRARY */}
           {currentTab === "gallery-items" && galleryData && (
             <GalleryItemsEditor
               items={galleryData.items}
+              categories={galleryData.categories || []}
               onChange={(items) =>
                 setGalleryData({ ...galleryData, items })
               }

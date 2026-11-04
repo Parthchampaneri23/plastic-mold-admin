@@ -165,8 +165,9 @@ export function Sidebar({ currentTab = "overview", setCurrentTab }: SidebarProps
   // Clean list of Gallery page sections
   const gallerySections = [
     { id: "gallery-hero", label: "1. Banner & Portfolio Intro" },
-    { id: "gallery-featured", label: "2. Featured Collections (3 Cards)" },
-    { id: "gallery-items", label: "3. Gallery Items & Media Library" },
+    { id: "gallery-categories", label: "2. Product & Gallery Categories" },
+    { id: "gallery-featured", label: "3. Featured Collections (3 Cards)" },
+    { id: "gallery-items", label: "4. Gallery Items & Media Library" },
   ];
 
   // Clean list of Blogs page sections

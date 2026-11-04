@@ -14,6 +14,9 @@ import {
   ExternalLink,
   BookOpen,
   Boxes,
+  AlertCircle,
+  X,
+  Check,
 } from "lucide-react";
 import {
   IIndustryItem,
@@ -21,21 +24,43 @@ import {
   IIndustryKeyRequirement,
   IIndustryFaq,
 } from "@/models/IndustryPageContent";
+import { DEFAULT_PRODUCTS } from "@/data/defaultProducts";
 
 interface IndustryListEditorProps {
   industries: IIndustryItem[];
+  availableProducts?: Array<{ id: string; slug: string; name: string; category?: string; image?: string }>;
   onChange: (industries: IIndustryItem[]) => void;
   selectedIndustryId?: string;
   onSelectIndustry?: (industryId: string) => void;
+  error?: string | null;
 }
 
 export function IndustryListEditor({
   industries,
+  availableProducts = [],
   onChange,
   selectedIndustryId,
   onSelectIndustry,
+  error,
 }: IndustryListEditorProps) {
   const [searchFilter, setSearchFilter] = useState("");
+  const [productSearch, setProductSearch] = useState("");
+  const [productDropdownOpen, setProductDropdownOpen] = useState(false);
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+
+  // Merge available products from catalog or fallback defaults
+  const productOptions = React.useMemo(() => {
+    if (availableProducts && availableProducts.length > 0) {
+      return availableProducts;
+    }
+    return DEFAULT_PRODUCTS.map((p) => ({
+      id: p.id,
+      slug: p.slug,
+      name: p.name,
+      category: p.category,
+      image: p.image,
+    }));
+  }, [availableProducts]);
   const [activeSubTab, setActiveSubTab] = useState<
     "basic" | "overview" | "requirements" | "applications" | "products" | "faqs"
   >("basic");
@@ -47,7 +72,39 @@ export function IndustryListEditor({
   const currentIdx = activeIndustryIndex !== -1 ? activeIndustryIndex : 0;
   const currentIndustry = industries[currentIdx] || industries[0];
 
+  // Validation checks for active industry
+  const isNameEmpty = !currentIndustry?.name || currentIndustry.name.trim() === "";
+  const isSlugEmpty = !currentIndustry?.slug || currentIndustry.slug.trim() === "";
+  const isShortDescEmpty = !currentIndustry?.shortDescription || currentIndustry.shortDescription.trim() === "";
+  const isImageEmpty = !currentIndustry?.image || currentIndustry.image.trim() === "";
+
+  const isDuplicateName = Boolean(
+    currentIndustry?.name &&
+      industries.some(
+        (ind, idx) =>
+          idx !== currentIdx &&
+          ind.name &&
+          ind.name.trim().toLowerCase() === currentIndustry.name.trim().toLowerCase()
+      )
+  );
+
+  const isDuplicateSlug = Boolean(
+    currentIndustry?.slug &&
+      industries.some(
+        (ind, idx) =>
+          idx !== currentIdx &&
+          ind.slug &&
+          ind.slug.trim().toLowerCase() === currentIndustry.slug.trim().toLowerCase()
+      )
+  );
+
+  const isTouched = Boolean(touched[currentIndustry?.id || currentIdx]);
+
   const handleUpdateIndustry = (field: keyof IIndustryItem, value: any) => {
+    setTouched((prev) => ({
+      ...prev,
+      [currentIndustry?.id || currentIdx]: true,
+    }));
     const updated = [...industries];
     updated[currentIdx] = {
       ...updated[currentIdx],
@@ -264,13 +321,20 @@ export function IndustryListEditor({
                     {idx + 1}
                   </div>
                   <div className="min-w-0">
-                    <p
-                      className={`text-xs font-bold truncate ${
-                        isSelected ? "text-[#0056b3]" : "text-slate-800"
-                      }`}
-                    >
-                      {ind.name}
-                    </p>
+                    <div className="flex items-center gap-1.5">
+                      <p
+                        className={`text-xs font-bold truncate ${
+                          isSelected ? "text-[#0056b3]" : "text-slate-800"
+                        }`}
+                      >
+                        {ind.name}
+                      </p>
+                      {ind.isActive === false && (
+                        <span className="text-[9px] font-semibold px-1.5 py-0.2 rounded bg-slate-200 text-slate-600 shrink-0">
+                          Inactive
+                        </span>
+                      )}
+                    </div>
                     <p className="text-[11px] text-slate-400 font-mono truncate">
                       /{ind.slug}
                     </p>
@@ -305,13 +369,30 @@ export function IndustryListEditor({
         {currentIndustry ? (
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
             {/* Header info */}
-            <div className="pb-4 mb-5 border-b border-slate-100">
-              <span className="text-[10px] font-mono uppercase tracking-wider text-[#ff6b00] font-bold bg-[#ff6b00]/10 px-2 py-0.5 rounded-full border border-[#ff6b00]/20">
-                Slug: /{currentIndustry.slug}
-              </span>
-              <h3 className="text-xl font-bold text-slate-900 mt-1">
-                {currentIndustry.name}
-              </h3>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 mb-5 border-b border-slate-100">
+              <div>
+                <span className="text-[10px] font-mono uppercase tracking-wider text-[#ff6b00] font-bold bg-[#ff6b00]/10 px-2 py-0.5 rounded-full border border-[#ff6b00]/20">
+                  Slug: /{currentIndustry.slug}
+                </span>
+                <h3 className="text-xl font-bold text-slate-900 mt-1">
+                  {currentIndustry.name}
+                </h3>
+              </div>
+
+              {/* Enable / Disable (Active / Inactive) Toggle Switch */}
+              <label className="flex items-center gap-2 cursor-pointer bg-slate-50 hover:bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-xl transition-colors shrink-0">
+                <input
+                  type="checkbox"
+                  checked={currentIndustry.isActive !== false}
+                  onChange={(e) =>
+                    handleUpdateIndustry("isActive", e.target.checked)
+                  }
+                  className="w-4 h-4 text-[#0056b3] rounded border-slate-300 focus:ring-0 cursor-pointer"
+                />
+                <span className="text-xs font-bold text-slate-700 select-none">
+                  {currentIndustry.isActive !== false ? "Active (Published)" : "Disabled (Hidden)"}
+                </span>
+              </label>
             </div>
 
             {/* Sub Tabs */}
@@ -344,28 +425,57 @@ export function IndustryListEditor({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                      Industry Sector Name
+                      Industry Sector Name <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       value={currentIndustry.name || ""}
                       onChange={(e) => handleUpdateIndustry("name", e.target.value)}
                       placeholder="e.g. Food & Beverage"
-                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:border-[#0056b3] focus:outline-none"
+                      className={`w-full px-3.5 py-2 rounded-xl border text-sm focus:outline-none transition-colors ${
+                        (isNameEmpty && (Boolean(error) || isTouched)) || isDuplicateName
+                          ? "border-red-400 bg-red-50/30 focus:border-red-500"
+                          : "border-slate-200 focus:border-[#0056b3]"
+                      }`}
                     />
+                    {((isNameEmpty && (Boolean(error) || isTouched)) || isDuplicateName) && (
+                      <p className="mt-1 text-xs text-red-600 flex items-center gap-1 font-medium">
+                        <AlertCircle className="w-3 h-3 shrink-0" />
+                        {isDuplicateName
+                          ? "Industry name already exists. Names must be unique."
+                          : "Industry Sector Name is required and cannot be blank."}
+                      </p>
+                    )}
                   </div>
 
                   <div>
                     <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                      URL Slug (Unique path)
+                      URL Slug (Unique path) <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       value={currentIndustry.slug || ""}
-                      onChange={(e) => handleUpdateIndustry("slug", e.target.value)}
+                      onChange={(e) =>
+                        handleUpdateIndustry(
+                          "slug",
+                          e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-")
+                        )
+                      }
                       placeholder="e.g. food-beverage"
-                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:border-[#0056b3] focus:outline-none font-mono"
+                      className={`w-full px-3.5 py-2 rounded-xl border text-sm font-mono focus:outline-none transition-colors ${
+                        (isSlugEmpty && (Boolean(error) || isTouched)) || isDuplicateSlug
+                          ? "border-red-400 bg-red-50/30 focus:border-red-500"
+                          : "border-slate-200 focus:border-[#0056b3]"
+                      }`}
                     />
+                    {((isSlugEmpty && (Boolean(error) || isTouched)) || isDuplicateSlug) && (
+                      <p className="mt-1 text-xs text-red-600 flex items-center gap-1 font-medium">
+                        <AlertCircle className="w-3 h-3 shrink-0" />
+                        {isDuplicateSlug
+                          ? "URL slug already exists. Slugs must be unique."
+                          : "URL Slug is required and cannot be blank."}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -409,24 +519,56 @@ export function IndustryListEditor({
 
                   <div className="md:col-span-2">
                     <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                      Card Short Description (Home & Listing)
+                      Card Short Description (Home & Listing) <span className="text-red-500">*</span>
                     </label>
                     <textarea
                       rows={2}
                       value={currentIndustry.shortDescription || ""}
                       onChange={(e) => handleUpdateIndustry("shortDescription", e.target.value)}
                       placeholder="High-cavitation moulds for PET bottles, mineral water packaging..."
-                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:border-[#0056b3] focus:outline-none"
+                      className={`w-full px-3.5 py-2 rounded-xl border text-sm focus:outline-none transition-colors ${
+                        isShortDescEmpty && (Boolean(error) || isTouched)
+                          ? "border-red-400 bg-red-50/30 focus:border-red-500"
+                          : "border-slate-200 focus:border-[#0056b3]"
+                      }`}
                     />
+                    {isShortDescEmpty && (Boolean(error) || isTouched) && (
+                      <p className="mt-1 text-xs text-red-600 flex items-center gap-1 font-medium">
+                        <AlertCircle className="w-3 h-3 shrink-0" />
+                        Card Short Description is required and cannot be blank.
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                      Sector Publishing Status
+                    </label>
+                    <select
+                      value={currentIndustry.isActive !== false ? "active" : "inactive"}
+                      onChange={(e) =>
+                        handleUpdateIndustry("isActive", e.target.value === "active")
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-[#0056b3] focus:outline-none bg-white font-medium"
+                    >
+                      <option value="active">Active (Visible across Website & Industries Grid)</option>
+                      <option value="inactive">Disabled / Inactive (Hidden from Public)</option>
+                    </select>
                   </div>
 
                   <div className="md:col-span-2">
                     <ImagePicker
-                      label="Sector Image (Card & Banner Background)"
+                      label="Sector Image (Card & Banner Background) *"
                       value={currentIndustry.image || ""}
                       onChange={(val) => handleUpdateIndustry("image", val)}
                       helperText="Upload or enter sector image path (e.g. /industries/packaging-clean.jpg)"
                     />
+                    {isImageEmpty && (Boolean(error) || isTouched) && (
+                      <p className="mt-1 text-xs text-red-600 flex items-center gap-1 font-medium">
+                        <AlertCircle className="w-3 h-3 shrink-0" />
+                        Sector Image is required and cannot be blank.
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -640,30 +782,163 @@ export function IndustryListEditor({
                 <div className="p-4 rounded-xl bg-blue-50 border border-blue-200 text-xs text-[#0056b3] flex items-start gap-2.5">
                   <Boxes className="w-4 h-4 shrink-0 mt-0.5" />
                   <div>
-                    <span className="font-bold">Connect Catalog Products:</span> Enter product slugs
-                    (comma-separated) matching the catalog products to automatically display their cards under
-                    &quot;Related Moulds &amp; Tooling Systems&quot;.
+                    <span className="font-bold">Connect Catalog Products:</span> Select products from the searchable dropdown list below. The system automatically maps and stores the corresponding product slugs/IDs.
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                    Related Product Slugs (Comma-separated)
+                <div className="space-y-3">
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    Assigned Related Products ({currentIndustry.relatedProductSlugs?.length || 0})
                   </label>
-                  <input
-                    type="text"
-                    value={(currentIndustry.relatedProductSlugs || []).join(", ")}
-                    onChange={(e) => handleRelatedProductSlugsChange(e.target.value)}
-                    placeholder="pet-preform-mold, pet-jar-mold, isbm-bottle-mold"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-[#0056b3] focus:outline-none font-mono"
-                  />
-                  <p className="text-[11px] text-slate-400 mt-1.5">
-                    Available standard slugs: <code>pet-preform-mold</code>, <code>pet-jar-mold</code>,{" "}
-                    <code>high-cavitation-preform-mold</code>, <code>isbm-bottle-mold</code>,{" "}
-                    <code>isbm-container-mold</code>, <code>multi-cavity-isbm-mold</code>,{" "}
-                    <code>ebm-bottle-mold</code>, <code>ebm-container-mold</code>,{" "}
-                    <code>ebm-industrial-packaging-mold</code>.
-                  </p>
+
+                  {/* Selected Products Tags */}
+                  <div className="flex flex-wrap gap-2 p-3 min-h-[50px] bg-slate-50 border border-slate-200 rounded-xl items-center">
+                    {(currentIndustry.relatedProductSlugs || []).length === 0 ? (
+                      <span className="text-xs text-slate-400">
+                        No related products selected yet. Search and select from the dropdown below.
+                      </span>
+                    ) : (
+                      (currentIndustry.relatedProductSlugs || []).map((slug) => {
+                        const matchedProduct = productOptions.find(
+                          (p) => p.slug === slug || p.id === slug
+                        );
+                        return (
+                          <span
+                            key={slug}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-semibold text-slate-800 shadow-xs"
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#0056b3]" />
+                            <span>{matchedProduct ? matchedProduct.name : slug}</span>
+                            <span className="text-[10px] font-mono text-slate-400 font-normal">
+                              ({slug})
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const nextSlugs = (currentIndustry.relatedProductSlugs || []).filter(
+                                  (s) => s !== slug
+                                );
+                                handleUpdateIndustry("relatedProductSlugs", nextSlugs);
+                              }}
+                              className="text-slate-400 hover:text-red-600 p-0.5 rounded cursor-pointer transition-colors"
+                              title="Remove Product"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </span>
+                        );
+                      })
+                    )}
+                  </div>
+
+                  {/* Searchable Product Dropdown / Multi-Select Picker */}
+                  <div className="relative">
+                    <label className="block text-xs font-bold text-slate-600 mb-1">
+                      Add Product from Catalog:
+                    </label>
+                    <div className="relative">
+                      <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        value={productSearch}
+                        onFocus={() => setProductDropdownOpen(true)}
+                        onChange={(e) => {
+                          setProductSearch(e.target.value);
+                          setProductDropdownOpen(true);
+                        }}
+                        placeholder="Search product by name or category (e.g. PET Preform, ISBM, EBM)..."
+                        className="w-full pl-9 pr-8 py-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-800 focus:outline-none focus:border-[#0056b3] bg-white shadow-xs"
+                      />
+                      {productSearch && (
+                        <button
+                          type="button"
+                          onClick={() => setProductSearch("")}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Dropdown Options Menu */}
+                    {productDropdownOpen && (
+                      <div className="absolute z-30 left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-lg p-1.5 space-y-1">
+                        <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center justify-between">
+                          <span>Select Product to Map</span>
+                          <button
+                            type="button"
+                            onClick={() => setProductDropdownOpen(false)}
+                            className="text-xs text-[#0056b3] hover:underline"
+                          >
+                            Done
+                          </button>
+                        </div>
+
+                        {productOptions
+                          .filter((p) => {
+                            if (!productSearch.trim()) return true;
+                            const query = productSearch.toLowerCase();
+                            return (
+                              p.name.toLowerCase().includes(query) ||
+                              p.slug.toLowerCase().includes(query) ||
+                              (p.category && p.category.toLowerCase().includes(query))
+                            );
+                          })
+                          .map((prod) => {
+                            const isAssigned = (currentIndustry.relatedProductSlugs || []).includes(
+                              prod.slug
+                            );
+
+                            return (
+                              <div
+                                key={prod.slug}
+                                onClick={() => {
+                                  const currentList = currentIndustry.relatedProductSlugs || [];
+                                  if (isAssigned) {
+                                    handleUpdateIndustry(
+                                      "relatedProductSlugs",
+                                      currentList.filter((s) => s !== prod.slug)
+                                    );
+                                  } else {
+                                    handleUpdateIndustry("relatedProductSlugs", [
+                                      ...currentList,
+                                      prod.slug,
+                                    ]);
+                                  }
+                                }}
+                                className={`p-2 rounded-lg flex items-center justify-between cursor-pointer transition-colors ${
+                                  isAssigned
+                                    ? "bg-blue-50 text-[#0056b3] font-semibold"
+                                    : "hover:bg-slate-50 text-slate-800"
+                                }`}
+                              >
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                  <div
+                                    className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${
+                                      isAssigned
+                                        ? "bg-[#0056b3] border-[#0056b3] text-white"
+                                        : "border-slate-300 bg-white"
+                                    }`}
+                                  >
+                                    {isAssigned && <Check className="w-3 h-3" />}
+                                  </div>
+                                  <div className="min-w-0">
+                                    <div className="text-xs font-bold truncate">{prod.name}</div>
+                                    <div className="text-[10px] text-slate-400 font-mono truncate">
+                                      {prod.category} • /{prod.slug}
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 shrink-0">
+                                  {isAssigned ? "Assigned" : "+ Add"}
+                                </span>
+                              </div>
+                            );
+                          })}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             )}

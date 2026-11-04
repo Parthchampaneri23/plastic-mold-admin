@@ -18,6 +18,31 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, message: "No file provided" }, { status: 400 });
     }
 
+    // Supported formats validation
+    const ALLOWED_MIME_TYPES = [
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/webp",
+      "image/gif",
+      "image/svg+xml",
+    ];
+    const ALLOWED_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp", ".gif", ".svg"];
+
+    const fileExt = path.extname(file.name || "").toLowerCase();
+    const isMimeValid = ALLOWED_MIME_TYPES.includes((file.type || "").toLowerCase());
+    const isExtValid = ALLOWED_EXTENSIONS.includes(fileExt);
+
+    if (!isMimeValid && !isExtValid) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Unsupported file format. Please upload JPG, PNG, or WEBP files only.",
+        },
+        { status: 400 }
+      );
+    }
+
     // 1. IF VERCEL BLOB STORAGE TOKEN IS AVAILABLE (On Vercel Live or Local .env)
     const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
     if (blobToken) {

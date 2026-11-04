@@ -70,6 +70,55 @@ export async function PUT(req: NextRequest) {
     await connectDB();
     const body = await req.json();
 
+    // Mandatory field validations for industries array
+    if (Array.isArray(body.industries)) {
+      for (let i = 0; i < body.industries.length; i++) {
+        const ind = body.industries[i];
+        if (!ind.name || !ind.name.trim()) {
+          return NextResponse.json(
+            { success: false, error: `Industry #${i + 1}: Industry Name is required.` },
+            { status: 400 }
+          );
+        }
+        if (!ind.slug || !ind.slug.trim()) {
+          return NextResponse.json(
+            { success: false, error: `Industry "${ind.name}": URL Slug is required.` },
+            { status: 400 }
+          );
+        }
+        if (!ind.shortDescription || !ind.shortDescription.trim()) {
+          return NextResponse.json(
+            { success: false, error: `Industry "${ind.name}": Card Short Description is required.` },
+            { status: 400 }
+          );
+        }
+        if (!ind.image || !ind.image.trim()) {
+          return NextResponse.json(
+            { success: false, error: `Industry "${ind.name}": Primary Image is required.` },
+            { status: 400 }
+          );
+        }
+      }
+
+      const names = body.industries.map((ind: any) => (ind.name || "").trim().toLowerCase()).filter(Boolean);
+      const duplicateName = names.find((n: string, idx: number) => names.indexOf(n) !== idx);
+      if (duplicateName) {
+        return NextResponse.json(
+          { success: false, error: "Industry name already exists. Industry names must be unique." },
+          { status: 400 }
+        );
+      }
+
+      const slugs = body.industries.map((ind: any) => (ind.slug || "").trim().toLowerCase()).filter(Boolean);
+      const duplicateSlug = slugs.find((s: string, idx: number) => slugs.indexOf(s) !== idx);
+      if (duplicateSlug) {
+        return NextResponse.json(
+          { success: false, error: "Industry URL slug already exists. Slugs must be unique." },
+          { status: 400 }
+        );
+      }
+    }
+
     const updated = await IndustryPageContent.findOneAndUpdate(
       {},
       { $set: body },

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import { Upload, Image as ImageIcon, Loader2, Eye, X, ExternalLink } from "lucide-react";
+import { Upload, Image as ImageIcon, Loader2, Eye, X, ExternalLink, AlertCircle } from "lucide-react";
 import { getImageMetadata } from "@/data/defaultImageMetadata";
 
 interface ImagePickerProps {
@@ -32,6 +32,7 @@ export function ImagePicker({
   const [uploading, setUploading] = useState(false);
   const [previewError, setPreviewError] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formatError, setFormatError] = useState<string | null>(null);
 
   // Compute default prefill from central registry based on current image path and label
   const defaultMeta = React.useMemo(() => {
@@ -64,6 +65,29 @@ export function ImagePicker({
     const file = e.target.files?.[0];
     if (!file) return;
 
+    setFormatError(null);
+
+    // Client-side file format validation
+    const ALLOWED_MIME_TYPES = [
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/webp",
+      "image/gif",
+      "image/svg+xml",
+    ];
+    const ALLOWED_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp", ".gif", ".svg"];
+    const ext = file.name ? ("." + file.name.split(".").pop()).toLowerCase() : "";
+    const isMimeValid = ALLOWED_MIME_TYPES.includes((file.type || "").toLowerCase());
+    const isExtValid = ALLOWED_EXTENSIONS.includes(ext);
+
+    if (!isMimeValid && !isExtValid) {
+      setFormatError("Unsupported file format. Please upload JPG, PNG, or WEBP files only.");
+      // Reset input value so user can retry same file name if needed
+      e.target.value = "";
+      return;
+    }
+
     setUploading(true);
     setPreviewError(false);
 
@@ -80,12 +104,13 @@ export function ImagePicker({
       if (data.success && data.url) {
         onChange(data.url);
       } else {
-        alert(data.message || "Upload failed");
+        setFormatError(data.message || "Upload failed. Unsupported file format.");
       }
     } catch (err: any) {
-      alert("Error uploading file: " + err.message);
+      setFormatError("Error uploading file: " + err.message);
     } finally {
       setUploading(false);
+      e.target.value = "";
     }
   };
 
@@ -167,7 +192,7 @@ export function ImagePicker({
                 type="file"
                 ref={fileInputRef}
                 onChange={handleFileChange}
-                accept="image/*"
+                accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml"
                 className="hidden"
               />
 
@@ -187,6 +212,21 @@ export function ImagePicker({
             </div>
           </div>
         </div>
+
+        {/* Validation Error Banner for unsupported format */}
+        {formatError && (
+          <div className="flex items-center gap-2 p-2.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-semibold">
+            <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
+            <span className="flex-1">{formatError}</span>
+            <button
+              type="button"
+              onClick={() => setFormatError(null)}
+              className="text-red-500 hover:text-red-700 p-0.5 rounded cursor-pointer"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
 
         {/* Image Name & Image Alt (SEO) Fields */}
         {showSeoFields && (

@@ -14,15 +14,19 @@ import {
   Sparkles,
   Info,
   CheckCircle2,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import {
   GalleryItem,
   GALLERY_CATEGORIES,
   GalleryCategory,
+  IGalleryCategoryItem,
 } from "@/data/defaultGallery";
 
 interface GalleryItemsEditorProps {
   items: GalleryItem[];
+  categories?: IGalleryCategoryItem[];
   onChange: (items: GalleryItem[]) => void;
   selectedItemId?: string;
   onSelectItem?: (id: string) => void;
@@ -30,6 +34,7 @@ interface GalleryItemsEditorProps {
 
 export function GalleryItemsEditor({
   items = [],
+  categories = [],
   onChange,
   selectedItemId,
   onSelectItem,
@@ -47,6 +52,14 @@ export function GalleryItemsEditor({
     }
     return items[0];
   }, [items, selectedItemId]);
+
+  // Available category options (from dynamic categories prop if present, else fallback)
+  const categoryOptionNames = useMemo(() => {
+    if (categories && categories.length > 0) {
+      return categories.map((c) => c.name);
+    }
+    return GALLERY_CATEGORIES.filter((c) => c !== "All Images");
+  }, [categories]);
 
   // Filter items for sidebar list
   const filteredItems = useMemo(() => {
@@ -95,6 +108,7 @@ export function GalleryItemsEditor({
       ],
       applicationContext: "Engineered for high-volume rigid packaging mold tooling.",
       relatedCategoryLink: "/infrastructure",
+      isActive: true,
     };
 
     onChange([newItem, ...items]);
@@ -111,6 +125,36 @@ export function GalleryItemsEditor({
         if (onSelectItem) onSelectItem(updated[0].id);
       }
     }
+  };
+
+  const handleMoveUpItem = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const index = items.findIndex((i) => i.id === id);
+    if (index <= 0) return;
+    const updated = [...items];
+    const temp = updated[index - 1];
+    updated[index - 1] = updated[index];
+    updated[index] = temp;
+    // Update order property
+    updated.forEach((item, idx) => {
+      item.order = idx + 1;
+    });
+    onChange(updated);
+  };
+
+  const handleMoveDownItem = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const index = items.findIndex((i) => i.id === id);
+    if (index === -1 || index >= items.length - 1) return;
+    const updated = [...items];
+    const temp = updated[index + 1];
+    updated[index + 1] = updated[index];
+    updated[index] = temp;
+    // Update order property
+    updated.forEach((item, idx) => {
+      item.order = idx + 1;
+    });
+    onChange(updated);
   };
 
   // Highlights handlers
@@ -198,7 +242,7 @@ export function GalleryItemsEditor({
             className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs focus:border-[#0056b3] focus:outline-none bg-slate-50"
           >
             <option value="All">All Categories ({items.length})</option>
-            {GALLERY_CATEGORIES.filter((c) => c !== "All Images").map((cat) => (
+            {categoryOptionNames.map((cat) => (
               <option key={cat} value={cat}>
                 {cat} ({items.filter((i) => i.category === cat).length})
               </option>
@@ -226,17 +270,27 @@ export function GalleryItemsEditor({
                   }`}
                 >
                   {/* Thumbnail */}
-                  <div className="w-12 h-12 rounded-lg bg-slate-100 relative overflow-hidden shrink-0 border border-slate-200">
+                  <div className="w-12 h-12 rounded-lg bg-slate-100 relative overflow-hidden shrink-0 border border-slate-200 flex items-center justify-center">
                     {item.image ? (
-                      <Image
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img
                         src={item.image}
-                        alt={item.title}
-                        fill
-                        sizes="48px"
-                        className="object-cover"
+                        alt={item.title || "Gallery thumbnail"}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.currentTarget as HTMLElement;
+                          target.style.display = "none";
+                          const parent = target.parentElement;
+                          if (parent && !parent.querySelector(".fallback-text")) {
+                            const fallback = document.createElement("div");
+                            fallback.className = "fallback-text text-[10px] text-slate-400 font-medium";
+                            fallback.innerText = "No Img";
+                            parent.appendChild(fallback);
+                          }
+                        }}
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-[10px] text-slate-400">
+                      <div className="text-[10px] text-slate-400 font-medium">
                         No Img
                       </div>
                     )}
@@ -253,6 +307,11 @@ export function GalleryItemsEditor({
                           • {item.badge}
                         </span>
                       )}
+                      {item.isActive === false && (
+                        <span className="text-[9px] font-semibold px-1 py-0.2 rounded bg-slate-200 text-slate-600 shrink-0">
+                          Hidden
+                        </span>
+                      )}
                     </div>
                     <p
                       className={`text-xs font-bold truncate ${
@@ -264,11 +323,33 @@ export function GalleryItemsEditor({
                     <p className="text-[10px] text-slate-400 truncate">/{item.slug}</p>
                   </div>
 
-                  <ChevronRight
-                    className={`w-4 h-4 shrink-0 transition-transform ${
-                      isSelected ? "text-[#0056b3] translate-x-0.5" : "text-slate-300"
-                    }`}
-                  />
+                  <div className="flex items-center gap-1 shrink-0">
+                    {/* Up / Down Controls for reordering */}
+                    <div className="flex flex-col gap-0.5">
+                      <button
+                        type="button"
+                        onClick={(e) => handleMoveUpItem(item.id, e)}
+                        title="Move Image Up in sequence"
+                        className="p-1 rounded hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
+                      >
+                        <ArrowUp className="w-3 h-3" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => handleMoveDownItem(item.id, e)}
+                        title="Move Image Down in sequence"
+                        className="p-1 rounded hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
+                      >
+                        <ArrowDown className="w-3 h-3" />
+                      </button>
+                    </div>
+
+                    <ChevronRight
+                      className={`w-4 h-4 shrink-0 transition-transform ${
+                        isSelected ? "text-[#0056b3] translate-x-0.5" : "text-slate-300"
+                      }`}
+                    />
+                  </div>
                 </div>
               );
             })
@@ -294,7 +375,22 @@ export function GalleryItemsEditor({
                 <h2 className="text-xl font-bold text-slate-900">{selectedItem.title}</h2>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
+                {/* Active / Inactive (Enable / Disable) Toggle Switch */}
+                <label className="flex items-center gap-2 cursor-pointer bg-slate-50 hover:bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-xl transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={selectedItem.isActive !== false}
+                    onChange={(e) =>
+                      handleUpdateCurrentItem({ isActive: e.target.checked })
+                    }
+                    className="w-4 h-4 text-[#0056b3] rounded border-slate-300 focus:ring-0 cursor-pointer"
+                  />
+                  <span className="text-xs font-bold text-slate-700 select-none">
+                    {selectedItem.isActive !== false ? "Active (Visible)" : "Disabled (Hidden)"}
+                  </span>
+                </label>
+
                 <button
                   type="button"
                   onClick={() => handleDeleteItem(selectedItem.id)}
@@ -399,7 +495,7 @@ export function GalleryItemsEditor({
                       }
                       className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:border-[#0056b3] focus:outline-none bg-white"
                     >
-                      {GALLERY_CATEGORIES.filter((c) => c !== "All Images").map((cat) => (
+                      {categoryOptionNames.map((cat) => (
                         <option key={cat} value={cat}>
                           {cat}
                         </option>
@@ -451,6 +547,42 @@ export function GalleryItemsEditor({
                       placeholder="Descriptive alt text for image indexing"
                       className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:border-[#0056b3] focus:outline-none"
                     />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                      Display Sort Order Sequence
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={
+                        selectedItem.order ??
+                        items.findIndex((i) => i.id === selectedItem.id) + 1
+                      }
+                      onChange={(e) => {
+                        const newOrder = parseInt(e.target.value, 10) || 1;
+                        handleUpdateCurrentItem({ order: newOrder });
+                      }}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm font-mono focus:border-[#0056b3] focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                      Visibility Status
+                    </label>
+                    <select
+                      value={selectedItem.isActive !== false ? "active" : "inactive"}
+                      onChange={(e) =>
+                        handleUpdateCurrentItem({
+                          isActive: e.target.value === "active",
+                        })
+                      }
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:border-[#0056b3] focus:outline-none bg-white font-medium"
+                    >
+                      <option value="active">Active (Published on Website)</option>
+                      <option value="inactive">Disabled / Inactive (Hidden)</option>
+                    </select>
                   </div>
                 </div>
 
